@@ -130,6 +130,41 @@ const supabaseService = {
       .insert([{ event_type: eventType, metadata }]);
     
     if (error) console.error('Error logging analytics event:', error);
+  },
+
+  // 9. Cập nhật trạng thái Ticket
+  async updateTicketStatus(ticketId, status) {
+    const { data, error } = await supabase
+      .from('tickets')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', ticketId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating ticket status:', error);
+      return null;
+    }
+    return data;
+  },
+
+  // 10. Thêm VIP Client mới
+  async addVipClient(chatId, displayName) {
+    const { data, error } = await supabase
+      .from('vip_clients')
+      .insert([{ chat_id: chatId }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding VIP client:', error);
+      return null;
+    }
+
+    // Đồng thời tạo record bên bảng clients
+    await this.upsertClient(chatId, displayName);
+    
+    return data;
   }
 };
 

@@ -1,62 +1,185 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const axios = require("axios");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || "gemini-1.5-flash" });
-
-const aiService = {
-  async analyzeConversation(chatHistory, openTicketsContext, clientName) {
-    const prompt = `
-Bạn là một trợ lý Ops thông minh của Danta Labs. Nhiệm vụ của bạn là phân tích lịch sử chat và quyết định xem có cần tạo ticket hỗ trợ kỹ thuật hay không.
-
-Hệ thống của chúng ta phục vụ khách hàng VIP qua WhatsApp.
-
-QUY TẮC QUYẾT ĐỊNH:
-1. CREATE_SUBTASK: Khi khách hàng báo lỗi mới, yêu cầu kỹ thuật mới, hoặc có một công việc thực tế cần xử lý (actionable) mà chưa có trong danh sách ticket đang mở.
-2. COMMENT: Khi khách hàng nhắn tin bổ sung thông tin cho một ticket đang mở sẵn (Cần xác định đúng ticket ID).
-3. IGNORE: Khi khách hàng chỉ chào hỏi xã giao ("Hello", "Cảm ơn", "Ok", "Em chào anh"), gửi icon, hoặc tin nhắn không chứa yêu cầu hành động cụ thể.
-
-DANH SÁCH TICKET ĐANG MỞ (CONTEXT):
-${openTicketsContext || 'Không có ticket nào đang mở.'}
-
-THÔNG TIN KHÁCH HÀNG:
-Tên: ${clientName}
-
-LỊCH SỬ CHAT GẦN ĐÂY:
-${chatHistory}
-
-YÊU CẦU ĐẦU RA (JSON):
-Bạn BẮT BUỘC phải trả về định dạng JSON chính xác sau:
-{
-  "decision": "CREATE_SUBTASK" | "COMMENT" | "IGNORE",
-  "reason": "Giải thích ngắn gọn lý do đưa ra quyết định này",
-  "summary": "Tiêu đề ngắn gọn của ticket (Chỉ khi CREATE_SUBTASK)",
-  "description": "Mô tả chi tiết công việc cần làm được lọc từ chat",
-  "priority": "High" | "Medium" | "Low",
-  "assignee_id": "Mã nhân viên chịu trách nhiệm (Phuc_ID, Tram_ID, hoặc Vy_ID dựa trên nghiệp vụ: Phuc cho Kỹ thuật/Dev, Tram cho Tư vấn/Lịch họp, Vy cho Nội bộ/Tools)"
+function stripCodeFences(text) {
+  if (typeof text !== "string") return "";
+  return text.replace(/```json/gi, "").replace(/```/g, "").trim();
 }
 
-LƯU Ý: Chỉ trả về JSON, không thêm văn bản giải thích nào khác ngoài JSON.
+function extractFirstJsonObject(text) {
+  if (typeof text !== "string") return null;
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end === -1) return null;
+  return text.slice(start, end + 1);
+}
+
+function isModelNotFoundError(error) {
+  const status = Number(error?.status);
+  const message = typeof error?.message === "string" ? error.message : "";
+  return status === 404 || /is not found for api version/i.test(message) || /not supported for generatecontent/i.test(message);
+}
+
+function normalizeString(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value.trim();
+  return String(value).trim();
+}
+
+function clampInt(value, { min, max, fallback }) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  const int = Math.trunc(num);
+  return Math.min(max, Math.max(min, int));
+}
+
+function tailLines(text, maxLines) {
+  const raw = typeof text === "string" ? text : "";
+  if (!raw) return "";
+  const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length <= maxLines) return lines.join("\n");
+  return lines.slice(lines.length - maxLines).join("\n");
+}
+
+function normalizePriority(value) {
+  const v = normalizeString(value).toLowerCase();
+  if (v === "high") return "High";
+  return "Medium";
+}
+
+function normalizeDecision(value) {
+  const v = normalizeString(value).toUpperCase();
+  return v === "CREATE_SUBTASK" ? "CREATE_SUBTASK" : "IGNORE";
+}
+
+function ensureDecisionShape(payload) {
+  const decision = normalizeDecision(payload?.decision);
+  const reason = normalizeString(payload?.reason) || (decision === "IGNORE" ? "IGNORE" : "Missing reason");
+  const summary = decision === "CREATE_SUBTASK" ? normalizeString(payload?.summary) : "";
+  const description = decision === "CREATE_SUBTASK" ? normalizeString(payload?.description) : "";
+  const priority = decision === "CREATE_SUBTASK" ? normalizePriority(payload?.priority) : "Medium";
+  const assignee_id = normalizeString(payload?.assignee_id) || "Phuc_ID";
+
+  return { decision, reason, summary, description, priority, assignee_id };
+}
+
+async function callOllama({ baseUrl, modelName, prompt }) {
+  const endpoint = `${baseUrl.replace(/\/+$/, "")}/api/generate`;
+  const numCtx = clampInt(process.env.OLLAMA_NUM_CTX, { min: 256, max: 4096, fallback: 512 });
+  const numPredict = clampInt(process.env.OLLAMA_NUM_PREDICT, { min: 32, max: 1024, fallback: 256 });
+  const response = await axios.post(
+    endpoint,
+    {
+      model: modelName,
+      prompt,
+      stream: false,
+      format: "json",
+      options: {
+        num_ctx: numCtx,
+        num_predict: numPredict,
+      },
+    },
+    {
+      headers: { "Content-Type": "application/json" },
+      timeout: 120_000,
+    }
+  );
+
+  const raw = response?.data?.response;
+  if (typeof raw !== "string" || !raw.trim()) throw new Error("Invalid response from Ollama");
+  return raw;
+}
+
+const aiService = {
+  async analyzeConversation(chatTranscript, ticketsContext, clientName) {
+    const provider = normalizeString(process.env.AI_PROVIDER).toLowerCase() || "gemini";
+    const transcriptLines = clampInt(process.env.AI_TRANSCRIPT_LINES, { min: 3, max: 30, fallback: 12 });
+    const compactTranscript = tailLines(chatTranscript, transcriptLines);
+
+    const prompt = `
+Bạn là trợ lý AdminOps của DantaLabs.
+Nhiệm vụ: Quyết định xem có cần tạo ticket hỗ trợ kỹ thuật hay không.
+
+QUY TẮC:
+1) CREATE_SUBTASK: Khách yêu cầu hỗ trợ, báo lỗi, hoặc có việc cần xử lý.
+2) IGNORE: Chào hỏi, cảm ơn, icon, hoặc không có yêu cầu cụ thể.
+
+CONTEXT TICKET ĐANG MỞ:
+${ticketsContext || "Không có ticket nào."}
+
+KHÁCH HÀNG: ${clientName}
+
+LỊCH SỬ CHAT:
+${compactTranscript}
+
+YÊU CẦU ĐẦU RA (JSON ONLY):
+{
+  "decision": "CREATE_SUBTASK | IGNORE",
+  "reason": "Lý do",
+  "summary": "Tiêu đề (nếu tạo ticket)",
+  "description": "Mô tả chi tiết",
+  "priority": "High | Medium",
+  "assignee_id": "Phuc_ID | Tram_ID | Vy_ID"
+}
 `;
 
     try {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      let text = response.text();
-      
-      // Clean JSON string in case AI adds markdown blocks
-      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      
-      const decision = JSON.parse(text);
+      let rawText = "";
 
-      // Map pseudo-ids to internal employee names/IDs
-      if (decision.assignee_id === 'Phuc_ID') decision.assignee_name = 'Phúc (Kỹ thuật)';
-      if (decision.assignee_id === 'Tram_ID') decision.assignee_name = 'Trâm (Tư vấn)';
-      if (decision.assignee_id === 'Vy_ID') decision.assignee_name = 'Vy (Nội bộ)';
+      if (provider === "ollama") {
+        const baseUrl = normalizeString(process.env.OLLAMA_BASE_URL) || "http://localhost:11434";
+        const modelName = normalizeString(process.env.OLLAMA_MODEL) || "llama3.2:3b";
+        rawText = await callOllama({ baseUrl, modelName, prompt });
+      } else {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) return { decision: "IGNORE", reason: "GEMINI_API_KEY_MISSING" };
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const preferredModelName = normalizeString(process.env.GEMINI_MODEL);
+        const fallbackModelName = "gemini-1.5-flash";
+        const modelNames = [preferredModelName, fallbackModelName].filter(Boolean);
+
+        let lastError;
+        for (const modelName of modelNames) {
+          try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            rawText = response.text();
+            lastError = null;
+            break;
+          } catch (error) {
+            lastError = error;
+            if (!isModelNotFoundError(error)) break;
+          }
+        }
+        if (lastError) throw lastError;
+      }
+      
+      let cleaned = stripCodeFences(rawText);
+      let jsonStr = extractFirstJsonObject(cleaned) || cleaned;
+      
+      const decision = ensureDecisionShape(JSON.parse(jsonStr));
+
+      // Mapping IDs
+      const mapping = {
+        'Phuc_ID': { id: process.env.JIRA_ASSIGNEE_Phuc_ID, name: 'Phúc (Kỹ thuật)' },
+        'Tram_ID': { id: process.env.JIRA_ASSIGNEE_Tram_ID, name: 'Trâm (Tư vấn)' },
+        'Vy_ID': { id: process.env.JIRA_ASSIGNEE_Vy_ID, name: 'Vy (Nội bộ)' }
+      };
+
+      const pic = mapping[decision.assignee_id] || mapping['Phuc_ID'];
+      decision.assignee_id = pic?.id || "";
+      decision.assignee_name = pic.name;
 
       return decision;
     } catch (error) {
-      console.error('Error analyzing with AI:', error);
-      return { decision: 'IGNORE', reason: 'AI analysis failed' };
+      const ollamaError = normalizeString(error?.response?.data?.error);
+      if (ollamaError) {
+        return { decision: "IGNORE", reason: `OLLAMA_ERROR: ${ollamaError}` };
+      }
+      console.error('AI Service Error:', error);
+      return { decision: 'IGNORE', reason: 'AI error' };
     }
   }
 };
