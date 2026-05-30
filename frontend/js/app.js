@@ -328,6 +328,12 @@ const CONFIG = {
   backendUrl: 'http://localhost:3000'
 };
 
+try {
+  if (location && location.protocol === 'file:') {
+    CONFIG.useMock = true;
+  }
+} catch (e) {}
+
 const state = {
   overview: { totalConversations: 0, totalTickets: 0, activeClients: 0, byDecision: { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 } },
   clients: [],
@@ -337,12 +343,31 @@ const state = {
 
 const delay = (ms = 150) => new Promise(resolve => setTimeout(resolve, ms));
 
+function normalizeTicket(raw) {
+  const base = { ...raw };
+  base.human_edits = Number.isFinite(base.human_edits) ? base.human_edits : 0;
+  base.is_deleted = Boolean(base.is_deleted);
+  base.deleted_at = base.deleted_at || null;
+  base.last_human_update_at = base.last_human_update_at || null;
+  base.assignee_name = base.assignee_name || 'Team';
+  return base;
+}
+
+function assigneeIdForName(name) {
+  const assigneeIds = {
+    Phuc: "7120c0000000000000000001",
+    Tram: "7120c0000000000000000002",
+    Vy: "7120c0000000000000000003"
+  };
+  return assigneeIds[name] || assigneeIds.Phuc;
+}
+
 const apiService = {
   async getOverview() {
     await delay();
     if (CONFIG.useMock) {
       const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
-      const totalTickets = state.tickets.length;
+      const totalTickets = state.tickets.filter(t => !normalizeTicket(t).is_deleted).length;
       const activeClients = state.clients.length;
       const byDecision = state.conversations.reduce((acc, c) => {
         if (c.aiDecision && c.direction === 'inbound') {
@@ -351,7 +376,7 @@ const apiService = {
         return acc;
       }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
 
-      byDecision.CREATE_SUBTASK = state.tickets.length;
+    byDecision.CREATE_SUBTASK = state.tickets.filter(t => !t.is_deleted).length;
       byDecision.COMMENT = 34;
       byDecision.IGNORE = state.conversations.filter(c => c.aiDecision === 'IGNORE' && c.direction === 'inbound').length + 76;
 
@@ -369,44 +394,26 @@ const apiService = {
     return stats;
   },
 
-  async getTickets() {
+  async getTickets(options = {}) {
     await delay();
     if (CONFIG.useMock) {
-      return [ ...state.tickets ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const includeDeleted = Boolean(options.includeDeleted);
+      return state.tickets
+        .map(normalizeTicket)
+        .filter(t => includeDeleted ? true : !t.is_deleted)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
     const res = await fetch(`${CONFIG.backendUrl}/api/tickets?limit=200`);
     const body = await res.json();
-    const tickets = (body.data || body || []).map(t => ({
-      ...t,
-      assignee_name: t.assignee_name || 'Team'
-    }));
+    const tickets = (body.data || body || []).map(normalizeTicket);
     state.tickets = tickets;
-    return tickets;
+    const includeDeleted = Boolean(options.includeDeleted);
+    return includeDeleted ? tickets : tickets.filter(t => !t.is_deleted);
   },
 
   async updateTicketStatus(ticketId, newStatus) {
-    await delay(300);
-    if (CONFIG.useMock) {
-      const ticket = state.tickets.find(t => String(t.id) === String(ticketId) || t.id === Number(ticketId));
-      if (ticket) {
-        ticket.status = newStatus;
-        ticket.updated_at = new Date().toISOString();
-        
-        const logId = `sys_upd_${Date.now()}`;
-        state.conversations.push({
-          id: logId,
-          chat_id: ticket.chat_id,
-          client_name: "YYDS System",
-          text: `[YYDS Ops] Trạng thái ticket #${ticket.jira_key || ticket.id} chuyển thành: ${newStatus}`,
-          direction: "system",
-          aiDecision: "IGNORE",
-          created_at: new Date().toISOString()
-        });
-        return { success: true, ticket };
-      }
-      return { success: false, error: 'Ticket not found' };
-    }
+    if (CONFIG.useMock) return await apiService.updateTicket(ticketId, { status: newStatus });
 
     const res = await fetch(`${CONFIG.backendUrl}/api/tickets/${ticketId}/status`, {
       method: 'PUT',
@@ -415,6 +422,101 @@ const apiService = {
     });
     const body = await res.json();
     return body;
+  },
+
+  async updateTicket(ticketId, patch = {}) {
+    await delay(250);
+    if (CONFIG.useMock) {
+      const idx = state.tickets.findIndex(t => String(t.id) === String(ticketId) || t.id === Number(ticketId));
+      if (idx === -1) return { success: false, error: 'Ticket not found' };
+
+      const existing = normalizeTicket(state.tickets[idx]);
+      if (existing.is_deleted) return { success: false, error: 'Ticket is deleted' };
+
+      const allowKeys = ['summary', 'description', 'priority', 'status', 'assignee_name'];
+      const changes = [];
+      const next = { ...existing };
+
+      allowKeys.forEach(key => {
+        if (patch[key] === undefined) return;
+        const nextVal = typeof patch[key] === 'string' ? patch[key].trim() : patch[key];
+        if (nextVal === '') return;
+        if (String(next[key] ?? '') !== String(nextVal)) {
+          changes.push(key);
+          next[key] = nextVal;
+        }
+      });
+
+      if (changes.includes('assignee_name')) {
+        next.assignee_id = assigneeIdForName(next.assignee_name);
+      }
+
+      if (changes.length === 0) return { success: true, ticket: existing };
+
+      next.human_edits = (existing.human_edits || 0) + 1;
+      next.last_human_update_at = new Date().toISOString();
+      next.updated_at = new Date().toISOString();
+
+      state.tickets[idx] = next;
+
+      state.conversations.push({
+        id: `sys_tkt_upd_${Date.now()}`,
+        chat_id: next.chat_id,
+        client_name: "YYDS System",
+        text: `[YYDS Ops] Ticket #${next.jira_key || next.id} updated (${changes.join(', ')}).`,
+        direction: "system",
+        aiDecision: "IGNORE",
+        created_at: new Date().toISOString()
+      });
+
+      return { success: true, ticket: normalizeTicket(next) };
+    }
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/tickets/${ticketId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch)
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { success: false, error: body.error || 'Update not supported by backend' };
+    return { success: true, ticket: normalizeTicket(body.data || body) };
+  },
+
+  async deleteTicket(ticketId) {
+    await delay(250);
+    if (CONFIG.useMock) {
+      const idx = state.tickets.findIndex(t => String(t.id) === String(ticketId) || t.id === Number(ticketId));
+      if (idx === -1) return { success: false, error: 'Ticket not found' };
+
+      const existing = normalizeTicket(state.tickets[idx]);
+      if (existing.is_deleted) return { success: true, ticket: existing };
+
+      const next = {
+        ...existing,
+        is_deleted: true,
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      state.tickets[idx] = next;
+
+      state.conversations.push({
+        id: `sys_tkt_del_${Date.now()}`,
+        chat_id: next.chat_id,
+        client_name: "YYDS System",
+        text: `[YYDS Ops] Ticket #${next.jira_key || next.id} deleted after review.`,
+        direction: "system",
+        aiDecision: "IGNORE",
+        created_at: new Date().toISOString()
+      });
+
+      return { success: true, ticket: normalizeTicket(next) };
+    }
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/tickets/${ticketId}`, { method: 'DELETE' });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { success: false, error: body.error || 'Delete not supported by backend' };
+    return { success: true, ticket: normalizeTicket(body.data || body) };
   },
 
   async getConversations() {
@@ -1041,6 +1143,8 @@ function showTicketDrawer(ticket) {
   const drawer = document.getElementById('ticket-drawer');
   if (!backdrop || !drawer) return;
 
+  ticket = normalizeTicket(ticket);
+
   const formattedDate = new Date(ticket.created_at).toLocaleString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
@@ -1049,6 +1153,10 @@ function showTicketDrawer(ticket) {
     minute: '2-digit',
     second: '2-digit'
   });
+
+  const lastHumanUpdate = ticket.last_human_update_at
+    ? new Date(ticket.last_human_update_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+    : '—';
 
   drawer.innerHTML = `
     <div class="drawer-header">
@@ -1076,16 +1184,24 @@ function showTicketDrawer(ticket) {
           <span class="drawer-meta-label">Thời gian tạo</span>
           <span class="drawer-meta-value">${formattedDate}</span>
         </div>
+        <div class="drawer-meta-item">
+          <span class="drawer-meta-label">Ops chỉnh sửa</span>
+          <span class="drawer-meta-value">${ticket.human_edits} lần</span>
+        </div>
+        <div class="drawer-meta-item">
+          <span class="drawer-meta-label">Lần chỉnh gần nhất</span>
+          <span class="drawer-meta-value">${lastHumanUpdate}</span>
+        </div>
       </div>
 
-      <div class="drawer-text-section">
-        <span class="drawer-text-label">Tiêu đề công việc</span>
-        <h2 style="font-family: var(--font-family-title); font-weight: 700; color: #fff; font-size: 1.1rem; line-height: 1.4;">${ticket.summary}</h2>
+      <div class="form-group">
+        <label class="form-label" for="drawer-summary-input">Tiêu đề ticket (có thể chỉnh)</label>
+        <input class="form-control" id="drawer-summary-input" style="background-color: var(--bg-main)" />
       </div>
 
-      <div class="drawer-text-section">
-        <span class="drawer-text-label">Nội dung chi tiết yêu cầu</span>
-        <div class="drawer-description-box">${ticket.description}</div>
+      <div class="form-group">
+        <label class="form-label" for="drawer-description-input">Mô tả chi tiết (có thể chỉnh)</label>
+        <textarea class="form-control" id="drawer-description-input" rows="7" style="background-color: var(--bg-main); resize: vertical;"></textarea>
       </div>
 
       <div class="ai-reasoning-card">
@@ -1095,6 +1211,26 @@ function showTicketDrawer(ticket) {
         </div>
         <div class="ai-reasoning-body">
           "${ticket.ai_reason}"
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem;">
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" for="drawer-priority-select">Priority</label>
+          <select class="form-control" id="drawer-priority-select" style="background-color: var(--bg-main)">
+            <option value="High" ${ticket.priority === 'High' ? 'selected' : ''}>High</option>
+            <option value="Medium" ${ticket.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+            <option value="Low" ${ticket.priority === 'Low' ? 'selected' : ''}>Low</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" for="drawer-assignee-select">Assignee</label>
+          <select class="form-control" id="drawer-assignee-select" style="background-color: var(--bg-main)">
+            <option value="Phuc" ${ticket.assignee_name === 'Phuc' ? 'selected' : ''}>Phuc</option>
+            <option value="Tram" ${ticket.assignee_name === 'Tram' ? 'selected' : ''}>Tram</option>
+            <option value="Vy" ${ticket.assignee_name === 'Vy' ? 'selected' : ''}>Vy</option>
+          </select>
         </div>
       </div>
 
@@ -1109,8 +1245,13 @@ function showTicketDrawer(ticket) {
     </div>
 
     <div class="drawer-footer">
-      <button class="btn btn-secondary" id="tkt-drawer-cancel-btn">Đóng lại</button>
-      <button class="btn btn-primary" id="tkt-drawer-save-btn">Lưu thay đổi</button>
+      <div class="drawer-footer-left">
+        <button class="btn btn-danger" id="tkt-drawer-delete-btn">Xóa ticket</button>
+      </div>
+      <div class="drawer-footer-right">
+        <button class="btn btn-secondary" id="tkt-drawer-cancel-btn">Đóng lại</button>
+        <button class="btn btn-primary" id="tkt-drawer-save-btn">Lưu thay đổi</button>
+      </div>
     </div>
   `;
 
@@ -1123,6 +1264,12 @@ function showTicketDrawer(ticket) {
   const closeBtn = document.getElementById('tkt-drawer-close');
   const cancelBtn = document.getElementById('tkt-drawer-cancel-btn');
   const saveBtn = document.getElementById('tkt-drawer-save-btn');
+  const deleteBtn = document.getElementById('tkt-drawer-delete-btn');
+
+  const summaryInput = document.getElementById('drawer-summary-input');
+  const descriptionInput = document.getElementById('drawer-description-input');
+  if (summaryInput) summaryInput.value = ticket.summary || '';
+  if (descriptionInput) descriptionInput.value = ticket.description || '';
 
   const closeDrawer = () => {
     backdrop.classList.remove('active');
@@ -1138,25 +1285,60 @@ function showTicketDrawer(ticket) {
 
   saveBtn?.addEventListener('click', async () => {
     const statusSelect = document.getElementById('drawer-status-select');
-    if (!statusSelect) return;
-    
-    const newStatus = statusSelect.value;
+    const prioritySelect = document.getElementById('drawer-priority-select');
+    const assigneeSelect = document.getElementById('drawer-assignee-select');
+    const summaryEl = document.getElementById('drawer-summary-input');
+    const descEl = document.getElementById('drawer-description-input');
+    if (!statusSelect || !prioritySelect || !assigneeSelect || !summaryEl || !descEl) return;
+
+    const patch = {
+      status: statusSelect.value,
+      priority: prioritySelect.value,
+      assignee_name: assigneeSelect.value,
+      summary: summaryEl.value.trim(),
+      description: descEl.value.trim()
+    };
+
     saveBtn.textContent = 'Đang lưu...';
     saveBtn.disabled = true;
+    deleteBtn && (deleteBtn.disabled = true);
 
     try {
-      const res = await apiService.updateTicketStatus(ticket.id, newStatus);
-      if (res.success) {
-        closeDrawer();
-        allTickets = await apiService.getTickets();
-        applyFilters();
-        renderTableRows();
-      }
+      const res = await apiService.updateTicket(ticket.id, patch);
+      if (!res || !res.success) throw new Error(res?.error || 'Update failed');
+      closeDrawer();
+      allTickets = await apiService.getTickets();
+      applyFilters();
+      renderTableRows();
     } catch (err) {
       console.error("Lỗi cập nhật ticket: ", err);
       alert("Đã xảy ra lỗi trong quá trình lưu trạng thái.");
       saveBtn.textContent = 'Lưu thay đổi';
       saveBtn.disabled = false;
+      deleteBtn && (deleteBtn.disabled = false);
+    }
+  });
+
+  deleteBtn?.addEventListener('click', async () => {
+    const ok = confirm(`Xóa ticket #${ticket.jira_key || ticket.id}? Hành động này dùng để đánh dấu AI tạo ticket không hợp lệ.`);
+    if (!ok) return;
+    deleteBtn.textContent = 'Đang xóa...';
+    deleteBtn.disabled = true;
+    saveBtn && (saveBtn.disabled = true);
+
+    try {
+      const res = await apiService.deleteTicket(ticket.id);
+      if (!res || !res.success) throw new Error(res?.error || 'Delete failed');
+      closeDrawer();
+      allTickets = await apiService.getTickets();
+      applyFilters();
+      renderTableRows();
+    } catch (err) {
+      console.error("Lỗi xóa ticket: ", err);
+      alert("Đã xảy ra lỗi trong quá trình xóa ticket.");
+      deleteBtn.textContent = 'Xóa ticket';
+      deleteBtn.disabled = false;
+      saveBtn && (saveBtn.disabled = false);
     }
   });
 }
@@ -1577,7 +1759,11 @@ async function renderAnalytics() {
 
   try {
     const stats = await apiService.getOverview();
-    const tickets = await apiService.getTickets();
+    const ticketsAll = await apiService.getTickets({ includeDeleted: true });
+    const tickets = ticketsAll.filter(t => !t.is_deleted);
+    const deletedTickets = ticketsAll.filter(t => t.is_deleted).length;
+    const editedTickets = ticketsAll.filter(t => (t.human_edits || 0) > 0).length;
+    const acceptanceRate = ticketsAll.length > 0 ? ((tickets.length / ticketsAll.length) * 100) : 100;
 
     const decisionStats = stats.byDecision;
     const subtasksCount = decisionStats.CREATE_SUBTASK || 0;
@@ -1724,15 +1910,15 @@ async function renderAnalytics() {
 
         <div class="glass-panel" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
           <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Tỷ lệ AI chính xác</span>
-            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--color-success)">99.2%</span>
-            <span style="font-size: 0.75rem; color: var(--color-muted);">Tỉ lệ ticket hợp lệ không cần xóa trên YYDS.</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Tỷ lệ AI hợp lệ</span>
+            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--color-success)">${acceptanceRate.toFixed(1)}%</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted);">${tickets.length} giữ lại • ${deletedTickets} bị xóa sau review</span>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Thời gian AI xử lý TB</span>
-            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--accent-primary)">1.45s</span>
-            <span style="font-size: 0.75rem; color: var(--color-muted);">Tính từ lúc nhận tin nhắn đến lúc xuất ticket.</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Ops chỉnh sửa</span>
+            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--accent-primary)">${editedTickets}</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted);">Số ticket được chỉnh thủ công để audit AI.</span>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.25rem;">
@@ -1824,6 +2010,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.add('sidebar-collapsed');
     }
   } catch (e) {}
+
+  if (CONFIG.useMock) {
+    if (state.clients.length === 0) state.clients = [ ...mockClients ];
+    if (state.tickets.length === 0) state.tickets = mockTickets.map(normalizeTicket);
+    if (state.conversations.length === 0) state.conversations = [ ...mockConversations ];
+    state.overview = { ...mockOverview };
+  }
 
   onTabChange(activeTab);
 });
