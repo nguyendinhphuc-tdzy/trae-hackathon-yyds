@@ -324,14 +324,15 @@ const mockConversations = [
 // ============================================================================
 
 const CONFIG = {
-  useMock: true
+  useMock: false,
+  backendUrl: 'http://localhost:3000'
 };
 
 const state = {
-  overview: { ...mockOverview },
-  clients: [ ...mockClients ],
-  tickets: [ ...mockTickets ],
-  conversations: [ ...mockConversations ]
+  overview: { totalConversations: 0, totalTickets: 0, activeClients: 0, byDecision: { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 } },
+  clients: [],
+  tickets: [],
+  conversations: []
 };
 
 const delay = (ms = 150) => new Promise(resolve => setTimeout(resolve, ms));
@@ -339,124 +340,185 @@ const delay = (ms = 150) => new Promise(resolve => setTimeout(resolve, ms));
 const apiService = {
   async getOverview() {
     await delay();
-    const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
-    const totalTickets = state.tickets.length;
-    const activeClients = state.clients.length;
-    const byDecision = state.conversations.reduce((acc, c) => {
-      if (c.aiDecision && c.direction === 'inbound') {
-        acc[c.aiDecision] = (acc[c.aiDecision] || 0) + 1;
-      }
-      return acc;
-    }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
+    if (CONFIG.useMock) {
+      const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
+      const totalTickets = state.tickets.length;
+      const activeClients = state.clients.length;
+      const byDecision = state.conversations.reduce((acc, c) => {
+        if (c.aiDecision && c.direction === 'inbound') {
+          acc[c.aiDecision] = (acc[c.aiDecision] || 0) + 1;
+        }
+        return acc;
+      }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
 
-    byDecision.CREATE_SUBTASK = state.tickets.length;
-    byDecision.COMMENT = 34;
-    byDecision.IGNORE = state.conversations.filter(c => c.aiDecision === 'IGNORE' && c.direction === 'inbound').length + 76;
+      byDecision.CREATE_SUBTASK = state.tickets.length;
+      byDecision.COMMENT = 34;
+      byDecision.IGNORE = state.conversations.filter(c => c.aiDecision === 'IGNORE' && c.direction === 'inbound').length + 76;
 
-    return {
-      totalConversations,
-      totalTickets,
-      activeClients,
-      byDecision
-    };
+      return {
+        totalConversations,
+        totalTickets,
+        activeClients,
+        byDecision
+      };
+    }
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/analytics/overview`);
+    const stats = await res.json();
+    state.overview = stats;
+    return stats;
   },
 
   async getTickets() {
     await delay();
-    return [ ...state.tickets ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    if (CONFIG.useMock) {
+      return [ ...state.tickets ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/tickets?limit=200`);
+    const body = await res.json();
+    const tickets = (body.data || body || []).map(t => ({
+      ...t,
+      assignee_name: t.assignee_name || 'Team'
+    }));
+    state.tickets = tickets;
+    return tickets;
   },
 
   async updateTicketStatus(ticketId, newStatus) {
     await delay(300);
-    const ticket = state.tickets.find(t => t.id === parseInt(ticketId));
-    if (ticket) {
-      ticket.status = newStatus;
-      ticket.updated_at = new Date().toISOString();
-      
-      const logId = `sys_upd_${Date.now()}`;
-      state.conversations.push({
-        id: logId,
-        chat_id: ticket.chat_id,
-        client_name: "YYDS System",
-        text: `[YYDS Ops] Trạng thái ticket #${ticket.jira_key || ticket.id} chuyển thành: ${newStatus}`,
-        direction: "system",
-        aiDecision: "IGNORE",
-        created_at: new Date().toISOString()
-      });
-      return { success: true, ticket };
+    if (CONFIG.useMock) {
+      const ticket = state.tickets.find(t => String(t.id) === String(ticketId) || t.id === Number(ticketId));
+      if (ticket) {
+        ticket.status = newStatus;
+        ticket.updated_at = new Date().toISOString();
+        
+        const logId = `sys_upd_${Date.now()}`;
+        state.conversations.push({
+          id: logId,
+          chat_id: ticket.chat_id,
+          client_name: "YYDS System",
+          text: `[YYDS Ops] Trạng thái ticket #${ticket.jira_key || ticket.id} chuyển thành: ${newStatus}`,
+          direction: "system",
+          aiDecision: "IGNORE",
+          created_at: new Date().toISOString()
+        });
+        return { success: true, ticket };
+      }
+      return { success: false, error: 'Ticket not found' };
     }
-    return { success: false, error: 'Ticket not found' };
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/tickets/${ticketId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const body = await res.json();
+    return body;
   },
 
   async getConversations() {
     await delay();
-    return [ ...state.conversations ];
+    if (CONFIG.useMock) return [ ...state.conversations ];
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/conversations?limit=200`);
+    const body = await res.json();
+    const conversations = (body.data || body || []).map(c => ({
+      ...c,
+      aiDecision: c.aiDecision || c.ai_decision
+    }));
+    state.conversations = conversations;
+    return conversations;
   },
 
   async sendMessage(chatId, text) {
     await delay(200);
-    const client = state.clients.find(c => c.chat_id === chatId);
-    const displayName = client ? client.display_name : "Khách hàng";
+    if (CONFIG.useMock) {
+      const client = state.clients.find(c => c.chat_id === chatId);
 
-    const newMsg = {
-      id: `out_${Date.now()}`,
-      chat_id: chatId,
-      client_name: "YYDS Autoreply",
-      text: text,
-      direction: "outbound",
-      aiDecision: "IGNORE",
-      created_at: new Date().toISOString()
-    };
-    
-    state.conversations.push(newMsg);
+      const newMsg = {
+        id: `out_${Date.now()}`,
+        chat_id: chatId,
+        client_name: "YYDS Autoreply",
+        text: text,
+        direction: "outbound",
+        aiDecision: "IGNORE",
+        created_at: new Date().toISOString()
+      };
+      
+      state.conversations.push(newMsg);
 
-    if (client) {
-      client.last_seen_at = new Date().toISOString();
+      if (client) {
+        client.last_seen_at = new Date().toISOString();
+      }
+
+      return { success: true, message: newMsg };
     }
 
-    return { success: true, message: newMsg };
+    const res = await fetch(`${CONFIG.backendUrl}/api/conversations/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId, text })
+    });
+    return await res.json();
   },
 
   async getClients() {
     await delay();
-    return [ ...state.clients ];
+    if (CONFIG.useMock) return [ ...state.clients ];
+
+    const res = await fetch(`${CONFIG.backendUrl}/api/clients`);
+    const body = await res.json();
+    const clients = body.data || body || [];
+    state.clients = clients;
+    return clients;
   },
 
   async addClient(chatId, displayName, assigneeName) {
     await delay(400);
-    if (state.clients.some(c => c.chat_id === chatId)) {
-      return { success: false, error: 'Khách hàng này đã tồn tại trong Whitelist!' };
+    if (CONFIG.useMock) {
+      if (state.clients.some(c => c.chat_id === chatId)) {
+        return { success: false, error: 'Khách hàng này đã tồn tại trong Whitelist!' };
+      }
+
+      const assigneeIds = {
+        Phuc: "7120c0000000000000000001",
+        Tram: "7120c0000000000000000002",
+        Vy: "7120c0000000000000000003"
+      };
+
+      const newClient = {
+        chat_id: chatId.includes('@') ? chatId : `${chatId}@c.us`,
+        display_name: displayName,
+        ticket_count: 0,
+        assignee_id: assigneeIds[assigneeName] || assigneeIds.Phuc,
+        assignee_name: assigneeName,
+        last_seen_at: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      };
+
+      state.clients.push(newClient);
+      
+      state.conversations.push({
+        id: `sys_seed_${Date.now()}`,
+        chat_id: newClient.chat_id,
+        client_name: "YYDS System",
+        text: `[YYDS] Số điện thoại ${newClient.chat_id} đã được thêm thành công vào YYDS VIP whitelist.`,
+        direction: "system",
+        aiDecision: "IGNORE",
+        created_at: new Date().toISOString()
+      });
+
+      return { success: true, client: newClient };
     }
 
-    const assigneeIds = {
-      Phuc: "7120c0000000000000000001",
-      Tram: "7120c0000000000000000002",
-      Vy: "7120c0000000000000000003"
-    };
-
-    const newClient = {
-      chat_id: chatId.includes('@') ? chatId : `${chatId}@c.us`,
-      display_name: displayName,
-      ticket_count: 0,
-      assignee_id: assigneeIds[assigneeName] || assigneeIds.Phuc,
-      assignee_name: assigneeName,
-      last_seen_at: new Date().toISOString(),
-      created_at: new Date().toISOString()
-    };
-
-    state.clients.push(newClient);
-    
-    state.conversations.push({
-      id: `sys_seed_${Date.now()}`,
-      chat_id: newClient.chat_id,
-      client_name: "YYDS System",
-      text: `[YYDS] Số điện thoại ${newClient.chat_id} đã được thêm thành công vào YYDS VIP whitelist.`,
-      direction: "system",
-      aiDecision: "IGNORE",
-      created_at: new Date().toISOString()
+    const normalizedChatId = chatId.includes('@') ? chatId : `${chatId}@c.us`;
+    const res = await fetch(`${CONFIG.backendUrl}/api/clients`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: normalizedChatId, display_name: displayName, assignee_name: assigneeName })
     });
-
-    return { success: true, client: newClient };
+    return await res.json();
   }
 };
 
@@ -873,7 +935,7 @@ async function renderTickets(options = {}) {
     bindFilterEvents();
 
     if (options.activeTicketId) {
-      const targetTkt = allTickets.find(t => t.id === parseInt(options.activeTicketId));
+      const targetTkt = allTickets.find(t => String(t.id) === String(options.activeTicketId));
       if (targetTkt) {
         showTicketDrawer(targetTkt);
       }
@@ -944,7 +1006,7 @@ function renderTableRows() {
   tbody.querySelectorAll('tr').forEach(row => {
     row.addEventListener('click', () => {
       const ticketId = row.getAttribute('data-row-id');
-      const ticket = allTickets.find(t => t.id === parseInt(ticketId));
+      const ticket = allTickets.find(t => String(t.id) === String(ticketId));
       if (ticket) showTicketDrawer(ticket);
     });
   });

@@ -24,9 +24,9 @@ const whatsappNotifyService = {
   },
 
   async sendClientConfirmation(whatsappClient, chatId, clientName, ticketId) {
-    const message = `[Hệ thống tự động] Xin chào ${clientName}, yêu cầu hỗ trợ của bạn đã được ghi nhận! 
-Mã số Ticket: #${ticketId.substring(0, 8)}. 
-Đội ngũ kỹ thuật Danta Labs đang xử lý và sẽ phản hồi sớm nhất có thể. Cảm ơn bạn!`;
+    const message = `[Automated System] Hi ${clientName}, your support request has been received.
+Ticket ID: #${ticketId.substring(0, 8)}.
+YYDS Team is working on it and will get back to you as soon as possible. Thank you!`;
 
     try {
       await whatsappClient.sendMessage(chatId, message);
