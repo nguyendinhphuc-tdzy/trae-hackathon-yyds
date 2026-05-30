@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdminOps Support Automation | DantaLabs</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><path d='M30 40 L50 65 L70 40' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+  
+  <!-- CSS Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div id="app">
+    <!-- Sidebar Left (Fixed) -->
+    <aside class="sidebar" id="sidebar-container"></aside>
+
+    <!-- Main Content Workspace -->
+    <div class="main-workspace">
+      <!-- Top Navigation Header -->
+      <header class="header" id="header-container"></header>
+
+      <!-- View Canvas (Dynamic Tab Views) -->
+      <main class="canvas" id="canvas-container">
+        <!-- Tab 1: Overview -->
+        <section id="view-overview" class="view-section active"></section>
+
+        <!-- Tab 2: Tickets -->
+        <section id="view-tickets" class="view-section"></section>
+
+        <!-- Tab 3: Inbox -->
+        <section id="view-inbox" class="view-section"></section>
+
+        <!-- Tab 4: VIP Clients -->
+        <section id="view-clients" class="view-section"></section>
+
+        <!-- Tab 5: Analytics -->
+        <section id="view-analytics" class="view-section"></section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Ticket details drawer slider (Slide in from Right) -->
+  <div class="drawer-backdrop" id="ticket-drawer-backdrop">
+    <div class="drawer" id="ticket-drawer"></div>
+  </div>
+
+  <!-- Add VIP Client Overlay Modal (Center Popup) -->
+  <div class="modal-backdrop" id="add-client-modal-backdrop">
+    <div class="modal-card" id="add-client-modal"></div>
+  </div>
+
+  <!-- Core Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
