@@ -54,7 +54,9 @@ function normalizeDecision(value) {
 
 function ensureDecisionShape(payload) {
   const decision = normalizeDecision(payload?.decision);
-  const reason = normalizeString(payload?.reason) || (decision === "IGNORE" ? "IGNORE" : "Missing reason");
+  const reason =
+    normalizeString(payload?.reason) ||
+    (decision === "IGNORE" ? "Non-actionable message" : "No reason provided");
   const summary = decision === "CREATE_SUBTASK" ? normalizeString(payload?.summary) : "";
   const description = decision === "CREATE_SUBTASK" ? normalizeString(payload?.description) : "";
   const priority = decision === "CREATE_SUBTASK" ? normalizePriority(payload?.priority) : "Medium";
@@ -97,27 +99,32 @@ const aiService = {
     const compactTranscript = tailLines(chatTranscript, transcriptLines);
 
     const prompt = `
-Bạn là trợ lý AdminOps của DantaLabs.
-Nhiệm vụ: Quyết định xem có cần tạo ticket hỗ trợ kỹ thuật hay không.
+You are the AdminOps assistant for YYDS Team.
+Task: Decide whether we should create a new support ticket from the conversation.
 
-QUY TẮC:
-1) CREATE_SUBTASK: Khách yêu cầu hỗ trợ, báo lỗi, hoặc có việc cần xử lý.
-2) IGNORE: Chào hỏi, cảm ơn, icon, hoặc không có yêu cầu cụ thể.
+STRICT RULES:
+1) Output MUST be valid JSON only. Do not include markdown, code fences, or extra text.
+2) ALL string fields MUST be in English. If the customer writes in Vietnamese or any other language, translate the meaning to English.
+3) Do not invent facts. Use only information explicitly present in CHAT HISTORY or OPEN TICKETS CONTEXT.
 
-CONTEXT TICKET ĐANG MỞ:
-${ticketsContext || "Không có ticket nào."}
+DECISION RULES:
+1) CREATE_SUBTASK: The customer reports a bug, requests support, or asks for a concrete action to be performed.
+2) IGNORE: Greetings, thanks, emojis, spam, or anything non-actionable.
 
-KHÁCH HÀNG: ${clientName}
+OPEN TICKETS CONTEXT:
+${ticketsContext || "No open tickets."}
 
-LỊCH SỬ CHAT:
+CUSTOMER NAME: ${clientName}
+
+CHAT HISTORY:
 ${compactTranscript}
 
-YÊU CẦU ĐẦU RA (JSON ONLY):
+OUTPUT CONTRACT (JSON ONLY):
 {
   "decision": "CREATE_SUBTASK | IGNORE",
-  "reason": "Lý do",
-  "summary": "Tiêu đề (nếu tạo ticket)",
-  "description": "Mô tả chi tiết",
+  "reason": "Explain why you chose this decision (English)",
+  "summary": "Short ticket title (English, required if CREATE_SUBTASK)",
+  "description": "Detailed ticket description (English, required if CREATE_SUBTASK)",
   "priority": "High | Medium",
   "assignee_id": "Phuc_ID | Tram_ID | Vy_ID"
 }
@@ -163,9 +170,9 @@ YÊU CẦU ĐẦU RA (JSON ONLY):
 
       // Mapping IDs
       const mapping = {
-        'Phuc_ID': { id: process.env.JIRA_ASSIGNEE_Phuc_ID, name: 'Phúc (Kỹ thuật)' },
-        'Tram_ID': { id: process.env.JIRA_ASSIGNEE_Tram_ID, name: 'Trâm (Tư vấn)' },
-        'Vy_ID': { id: process.env.JIRA_ASSIGNEE_Vy_ID, name: 'Vy (Nội bộ)' }
+        'Phuc_ID': { id: process.env.JIRA_ASSIGNEE_Phuc_ID, name: 'Phuc (Engineering)' },
+        'Tram_ID': { id: process.env.JIRA_ASSIGNEE_Tram_ID, name: 'Tram (Support)' },
+        'Vy_ID': { id: process.env.JIRA_ASSIGNEE_Vy_ID, name: 'Vy (Operations)' }
       };
 
       const pic = mapping[decision.assignee_id] || mapping['Phuc_ID'];

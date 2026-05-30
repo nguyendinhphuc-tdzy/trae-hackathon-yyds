@@ -18,18 +18,18 @@ const gmailService = {
     const mailOptions = {
       from: process.env.GMAIL_FROM || process.env.GMAIL_USER,
       to: process.env.GMAIL_TO,
-      subject: `[ALERT] New Ticket Created: ${ticketData.summary}`,
+      subject: `[ALERT] New Ticket Created — ${ticketData.summary}`,
       html: `
-        <h3>Hệ thống tự động hóa Danta Labs thông báo:</h3>
+        <h3>YYDS Team Automated Alert</h3>
         <p><b>Ticket ID:</b> #${ticketData.id.substring(0, 8)}</p>
-        <p><b>Khách hàng:</b> ${ticketData.client_name}</p>
-        <p><b>Tiêu đề:</b> ${ticketData.summary}</p>
-        <p><b>Mô tả:</b> ${ticketData.description}</p>
-        <p><b>Mức độ ưu tiên:</b> ${ticketData.priority}</p>
-        <p><b>Người phụ trách:</b> ${ticketData.assignee_name || 'Chưa phân công'}</p>
-        <p><b>Lý do AI:</b> ${ticketData.ai_reason}</p>
+        <p><b>Customer:</b> ${ticketData.client_name}</p>
+        <p><b>Title:</b> ${ticketData.summary}</p>
+        <p><b>Description:</b> ${ticketData.description}</p>
+        <p><b>Priority:</b> ${ticketData.priority}</p>
+        <p><b>Assignee:</b> ${ticketData.assignee_name || 'Unassigned'}</p>
+        <p><b>AI Reason:</b> ${ticketData.ai_reason}</p>
         <hr>
-        <p>Vui lòng kiểm tra Dashboard để xử lý.</p>
+        <p>Please check the dashboard to take action.</p>
       `
     };
 

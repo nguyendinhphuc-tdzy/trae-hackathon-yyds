@@ -6,14 +6,15 @@ const whatsappNotifyService = {
       return;
     }
 
-    const message = `🚨 *TICKET MỚI ĐƯỢC TẠO* 🚨
+    const message = `🚨 *NEW TICKET CREATED* 🚨
 ---------------------------
-👤 *Khách hàng:* ${ticketData.client_name}
-📝 *Tiêu đề:* ${ticketData.summary}
-🔥 *Độ ưu tiên:* ${ticketData.priority}
-🤖 *Lý do AI:* ${ticketData.ai_reason}
+Customer: ${ticketData.client_name}
+Title: ${ticketData.summary}
+Priority: ${ticketData.priority}
+Assignee: ${ticketData.assignee_name || 'Unassigned'}
+AI Reason: ${ticketData.ai_reason}
 ---------------------------
-👉 _Vui lòng kiểm tra hệ thống quản trị để xử lý._`;
+Please check the dashboard to take action.`;
 
     try {
       await whatsappClient.sendMessage(internalChatId, message);
