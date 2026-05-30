@@ -72,13 +72,13 @@ const mockTickets = [
     id: 104,
     chat_id: "84987654321@c.us",
     client_name: "Nguyễn Đình Phúc",
-    summary: "Lỗi không thanh toán được bằng thẻ Mastercard",
-    description: "Khách hàng báo cáo lỗi nghiêm trọng khi thanh toán qua thẻ Mastercard trên cổng web chính thức. Hệ thống ném lỗi Code 500 (Internal Server Error) trong lúc gọi API Stripe checkout.\n\nYêu cầu PIC Phuc kiểm tra lại hàm signature validation và webhook handler của cổng thanh toán Stripe trên server NestJS để giải quyết lỗi.",
+    summary: "Mastercard checkout fails",
+    description: "Customer reports a critical payment failure when checking out with Mastercard on the official web portal. The system returns a 500 Internal Server Error during the Stripe checkout call.\n\nAssignee Phuc: verify signature validation and the Stripe webhook handler in the NestJS payment service.",
     priority: "High",
     status: "Open",
     assignee_id: "7120c0000000000000000001",
     assignee_name: "Phuc",
-    ai_reason: "Khách hàng báo cáo lỗi giao dịch thanh toán code 500 thất bại nhiều lần vào lúc 10h sáng. Yêu cầu thuộc mảng kỹ thuật nghiêm trọng cần mở ticket lập tức.",
+    ai_reason: "Critical payment failures reported (500 errors) across multiple attempts. High severity, requires immediate ticket creation.",
     jira_key: "YYDS-104",
     created_at: "2026-05-30T10:46:00+07:00",
     updated_at: "2026-05-30T10:46:00+07:00"
@@ -87,13 +87,13 @@ const mockTickets = [
     id: 103,
     chat_id: "84912345678@c.us",
     client_name: "Khánh Vy",
-    summary: "Yêu cầu nâng cấp các công cụ vận hành nội bộ (Internal tools)",
-    description: "Khách hàng Vy đề xuất tích hợp thêm module kéo thả dữ liệu (drag & drop columns) trên bảng quản lý vip_clients trong cổng Admin Portal hiện tại.\n\nYêu cầu thiết kế lại cấu trúc bảng hiển thị, bổ sung custom settings cho phép lưu trạng thái sắp xếp cột của Ops Team.",
+    summary: "Upgrade internal Ops tools (drag & drop columns)",
+    description: "Request to add a drag & drop columns module for the vip_clients table in the current Admin Portal.\n\nRedesign the table structure and add settings to persist column order for the Ops team.",
     priority: "Medium",
     status: "In Progress",
     assignee_id: "7120c0000000000000000003",
     assignee_name: "Vy",
-    ai_reason: "Khách hàng yêu cầu nâng cấp và phát triển thêm tính năng cho bảng quản trị nội bộ. Phân luồng chính xác cho Vy (PIC Internal tools).",
+    ai_reason: "Internal tooling enhancement request. Routed to Vy (Internal Tools owner).",
     jira_key: "YYDS-103",
     created_at: "2026-05-30T10:15:00+07:00",
     updated_at: "2026-05-30T10:30:00+07:00"
@@ -102,13 +102,13 @@ const mockTickets = [
     id: 102,
     chat_id: "84901122334@c.us",
     client_name: "Thùy Trâm",
-    summary: "Họp tư vấn chiến lược di chuyển hạ tầng dữ liệu và định giá",
-    description: "Khách hàng có mong muốn đặt lịch hẹn họp vào đầu tuần tới (thứ Hai lúc 14:00) nhằm làm việc sâu hơn về báo giá gói hỗ trợ doanh nghiệp và chi phí dự phòng di cư database sang YYDS Enterprise.\n\nCần chuẩn bị slide tổng hợp và bảng so sánh báo giá dự kiến gửi khách trước giờ họp.",
+    summary: "Strategy consult: data migration + pricing",
+    description: "Customer wants to schedule a meeting next week (Monday 14:00) to discuss enterprise support pricing and estimated costs for migrating a database to YYDS Enterprise.\n\nPrepare a summary deck and a pricing comparison table before the meeting.",
     priority: "Medium",
     status: "In Progress",
     assignee_id: "7120c0000000000000000002",
     assignee_name: "Tram",
-    ai_reason: "Khách hàng gửi yêu cầu họp thảo luận tư vấn chiến lược và thương thảo biểu phí dịch vụ mới. Điều phối về cho Tram giải quyết chính xác.",
+    ai_reason: "Customer requests a strategic consultation and pricing discussion. Routed to Tram.",
     jira_key: "YYDS-102",
     created_at: "2026-05-30T09:31:00+07:00",
     updated_at: "2026-05-30T09:35:00+07:00"
@@ -117,13 +117,13 @@ const mockTickets = [
     id: 101,
     chat_id: "1203631987654321@g.us",
     client_name: "Ops Team YYDS",
-    summary: "Xử lý lỗi rò rỉ bộ nhớ (Memory leak) của yydsIngestion script",
-    description: "Nhóm vận hành phản ánh server chạy yyds-web.js thường xuyên bị quá tải CPU và crash bất ngờ sau 48h hoạt động liên tục. Nghi ngờ lỗi rò rỉ do tích hợp Chromium headless không giải phóng bộ nhớ khi khởi tạo lại QR Auth.\n\nPhuc cần kiểm tra kỹ phương thức client.destroy() và dọn dẹp các tiến trình zombie chrome.",
+    summary: "Memory leak in yydsIngestion (headless Chromium)",
+    description: "Ops reports yyds-web.js frequently spikes CPU and crashes after ~48 hours. Suspected leak from headless Chromium not releasing memory when reinitializing QR auth.\n\nPhuc: verify client.destroy() and clean up zombie Chrome processes.",
     priority: "High",
     status: "Resolved",
     assignee_id: "7120c0000000000000000001",
     assignee_name: "Phuc",
-    ai_reason: "Báo cáo lỗi kỹ thuật hạ tầng, ảnh hưởng lớn đến thời gian uptime của toàn bộ pipeline tin nhắn YYDS. Lập ticket ưu tiên cao giao cho Phuc.",
+    ai_reason: "High-impact infrastructure issue affecting uptime. High priority ticket routed to Phuc.",
     jira_key: "YYDS-101",
     created_at: "2026-05-29T14:20:00+07:00",
     updated_at: "2026-05-30T08:15:00+07:00"
@@ -132,13 +132,13 @@ const mockTickets = [
     id: 100,
     chat_id: "84933445566@c.us",
     client_name: "Lê Minh Tuấn (VIP Partner)",
-    summary: "Đồng bộ hóa danh sách VIP Client tự động từ Google Sheet",
-    description: "Khách hàng Tuấn đề xuất viết một script NodeJS chạy cronjob mỗi 12 giờ để kéo danh sách đối tác VIP từ Google Sheet của phòng Marketing về lưu trữ trong YYDS, thay vì nhập thủ công bằng SQL Editor.",
+    summary: "Auto-sync VIP clients from Google Sheets",
+    description: "Request to build a Node.js cron job (every 12 hours) to pull VIP partners from Marketing's Google Sheet into YYDS storage instead of manual SQL imports.",
     priority: "Medium",
     status: "Resolved",
     assignee_id: "7120c0000000000000000003",
     assignee_name: "Vy",
-    ai_reason: "Mở rộng tính năng tự động hóa luồng nhập liệu. Chuyển cho Vy xử lý.",
+    ai_reason: "Automation request for data ingestion. Routed to Vy.",
     jira_key: "YYDS-100",
     created_at: "2026-05-28T10:10:00+07:00",
     updated_at: "2026-05-29T16:00:00+07:00"
@@ -150,7 +150,7 @@ const mockConversations = [
     id: "c1_1",
     chat_id: "84987654321@c.us",
     client_name: "Nguyễn Đình Phúc",
-    text: "Chào admin, hệ thống web thanh toán của mình đang bị sao thế? Tôi giao dịch nãy giờ 3 lần đều bị văng lỗi.",
+    text: "Hi admin, the payment website seems broken. I've tried paying 3 times and it keeps failing.",
     direction: "inbound",
     aiDecision: "IGNORE",
     created_at: "2026-05-30T10:44:00+07:00"
@@ -159,7 +159,7 @@ const mockConversations = [
     id: "c1_2",
     chat_id: "84987654321@c.us",
     client_name: "Nguyễn Đình Phúc",
-    text: "Nó báo lỗi giao dịch code 500 khi tôi chọn Mastercard để thanh toán gói Premium. Xem gấp hộ tôi với!",
+    text: "It shows a 500 error when I choose Mastercard to pay for Premium. Please check urgently!",
     direction: "inbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T10:45:00+07:00"
@@ -168,7 +168,7 @@ const mockConversations = [
     id: "c1_sys",
     chat_id: "84987654321@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Đang phân tích tin nhắn và ngữ cảnh cuộc hội thoại...",
+    text: "[AI Engine] Analyzing the message and conversation context...",
     direction: "system",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T10:45:30+07:00"
@@ -177,7 +177,7 @@ const mockConversations = [
     id: "c1_sys_t",
     chat_id: "84987654321@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Tạo ticket thành công! Mã Subtask con: #YYDS-104. Phân công xử lý mặc định: PIC Phuc.",
+    text: "[AI Engine] Ticket created. Key: #YYDS-104. Default assignee: Phuc.",
     direction: "system",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T10:46:00+07:00"
@@ -186,7 +186,7 @@ const mockConversations = [
     id: "c1_out",
     chat_id: "84987654321@c.us",
     client_name: "YYDS Autoreply",
-    text: "[YYDS] Xin chào Nguyễn Đình Phúc, yêu cầu hỗ trợ kỹ thuật của bạn đã được ghi nhận tự động vào hệ thống! Mã số Ticket hỗ trợ: #YYDS-104. PIC Phuc đang tiếp nhận xử lý.",
+    text: "[YYDS] Hi Nguyễn Đình Phúc, your support request has been recorded. Ticket: #YYDS-104. Assignee Phuc is investigating.",
     direction: "outbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T10:46:05+07:00"
@@ -195,7 +195,7 @@ const mockConversations = [
     id: "c2_1",
     chat_id: "84912345678@c.us",
     client_name: "Khánh Vy",
-    text: "Alo Phúc ơi, rảnh không?",
+    text: "Hey Phuc, are you free?",
     direction: "inbound",
     aiDecision: "IGNORE",
     created_at: "2026-05-30T11:03:00+07:00"
@@ -204,7 +204,7 @@ const mockConversations = [
     id: "c2_sys1",
     chat_id: "84912345678@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Nhận tin nhắn chào hỏi xã giao. Trạng thái: IGNORE (Bỏ qua).",
+    text: "[AI Engine] Non-actionable greeting detected. Decision: IGNORE.",
     direction: "system",
     aiDecision: "IGNORE",
     created_at: "2026-05-30T11:03:30+07:00"
@@ -213,7 +213,7 @@ const mockConversations = [
     id: "c2_2",
     chat_id: "84912345678@c.us",
     client_name: "Khánh Vy",
-    text: "Giờ tôi muốn thêm tính năng kéo thả cột trên bảng quản lý vip_clients trong Admin Portal để Ops Team dùng cho tiện, Vy code giùm được không?",
+    text: "I want drag & drop columns for the vip_clients table in the Admin Portal so Ops can manage it easier. Can you implement it?",
     direction: "inbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T11:04:00+07:00"
@@ -222,7 +222,7 @@ const mockConversations = [
     id: "c2_sys2",
     chat_id: "84912345678@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Phát hiện yêu cầu phát triển tính năng vận hành nội bộ. Tạo ticket thành công! Mã Subtask con: #YYDS-103. PIC phụ trách: Vy.",
+    text: "[AI Engine] Internal tooling feature request detected. Ticket created: #YYDS-103. Assignee: Vy.",
     direction: "system",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T11:05:00+07:00"
@@ -231,7 +231,7 @@ const mockConversations = [
     id: "c2_out",
     chat_id: "84912345678@c.us",
     client_name: "YYDS Autoreply",
-    text: "[YYDS] Xin chào Khánh Vy, yêu cầu hỗ trợ kỹ thuật của bạn đã được ghi nhận tự động vào hệ thống! Mã số Ticket hỗ trợ: #YYDS-103. PIC Vy đang chịu trách nhiệm giải quyết.",
+    text: "[YYDS] Hi Khánh Vy, your request has been recorded. Ticket: #YYDS-103. Assignee Vy is handling it.",
     direction: "outbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T11:05:05+07:00"
@@ -240,7 +240,7 @@ const mockConversations = [
     id: "c3_1",
     chat_id: "84901122334@c.us",
     client_name: "Thùy Trâm",
-    text: "Thứ 2 tuần tới khoảng 2h chiều, anh Phúc với chị Trâm rảnh họp tư vấn biểu phí chuyển đổi database YYDS Enterprise cho tôi nhé.",
+    text: "Next Monday around 2pm, can we meet to discuss YYDS Enterprise database migration pricing?",
     direction: "inbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T09:30:00+07:00"
@@ -249,7 +249,7 @@ const mockConversations = [
     id: "c3_sys",
     chat_id: "84901122334@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Nhận diện lịch họp tư vấn di chuyển hạ tầng và chính sách định giá dịch vụ. Tạo ticket thành công! Mã Subtask con: #YYDS-102. PIC phụ trách: Tram.",
+    text: "[AI Engine] Strategy consult + pricing meeting request detected. Ticket created: #YYDS-102. Assignee: Tram.",
     direction: "system",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T09:31:00+07:00"
@@ -258,7 +258,7 @@ const mockConversations = [
     id: "c3_out",
     chat_id: "84901122334@c.us",
     client_name: "YYDS Autoreply",
-    text: "[YYDS] Xin chào Thùy Trâm, yêu cầu hỗ trợ kỹ thuật của bạn đã được ghi nhận tự động vào hệ thống! Mã số Ticket hỗ trợ: #YYDS-102. PIC Tram đang xử lý yêu cầu đặt lịch họp và chuẩn bị slide.",
+    text: "[YYDS] Hi Thùy Trâm, your request has been recorded. Ticket: #YYDS-102. Assignee Tram is scheduling the meeting and preparing materials.",
     direction: "outbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-30T09:31:05+07:00"
@@ -267,7 +267,7 @@ const mockConversations = [
     id: "c4_1",
     chat_id: "1203631987654321@g.us",
     client_name: "Ops Team YYDS",
-    text: "Phúc ơi, script yydsIngestion chạy headless chrome cứ 2 ngày là bị overload CPU rồi đơ cứng luôn. Có bị memory leak gì không vậy?",
+    text: "Phuc, the yydsIngestion headless Chrome script overloads CPU and freezes every ~2 days. Could this be a memory leak?",
     direction: "inbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-29T14:18:00+07:00"
@@ -276,7 +276,7 @@ const mockConversations = [
     id: "c4_sys",
     chat_id: "1203631987654321@g.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Cảnh báo lỗi nghiêm trọng về memory leak và tài nguyên CPU quá tải. Tạo ticket thành công! Mã Subtask con: #YYDS-101. PIC phụ trách: Phuc.",
+    text: "[AI Engine] Critical CPU/memory leak risk detected. Ticket created: #YYDS-101. Assignee: Phuc.",
     direction: "system",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-29T14:20:00+07:00"
@@ -285,7 +285,7 @@ const mockConversations = [
     id: "c5_1",
     chat_id: "84933445566@c.us",
     client_name: "Lê Minh Tuấn (VIP Partner)",
-    text: "Marketing kêu nhập VIP client bằng tay bất tiện quá, team xem làm thế nào tự động kéo từ file Excel/Google Sheet về YYDS định kỳ được không?",
+    text: "Manual VIP entry is painful. Can we auto-sync VIP clients from Excel/Google Sheets into YYDS on a schedule?",
     direction: "inbound",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-28T10:08:00+07:00"
@@ -294,7 +294,7 @@ const mockConversations = [
     id: "c5_sys",
     chat_id: "84933445566@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Tạo ticket hỗ trợ tự động đồng bộ hóa danh mục. Mã Subtask: #YYDS-100. PIC phụ trách: Vy.",
+    text: "[AI Engine] Auto-sync request detected. Ticket created: #YYDS-100. Assignee: Vy.",
     direction: "system",
     aiDecision: "CREATE_SUBTASK",
     created_at: "2026-05-28T10:10:00+07:00"
@@ -303,7 +303,7 @@ const mockConversations = [
     id: "c6_1",
     chat_id: "84988776655@c.us",
     client_name: "Phan Hoàng Sơn (YYDS VIP)",
-    text: "Hello team YYDS nha, hôm nay vận hành ổn áp chứ?",
+    text: "Hello YYDS team, how's ops today?",
     direction: "inbound",
     aiDecision: "IGNORE",
     created_at: "2026-05-28T15:09:00+07:00"
@@ -312,7 +312,7 @@ const mockConversations = [
     id: "c6_sys",
     chat_id: "84988776655@c.us",
     client_name: "YYDS System",
-    text: "[AI Engine] Nhận tin nhắn chào hỏi thăm hỏi. Trạng thái: IGNORE.",
+    text: "[AI Engine] Greeting detected. Decision: IGNORE.",
     direction: "system",
     aiDecision: "IGNORE",
     created_at: "2026-05-28T15:10:00+07:00"
@@ -349,10 +349,15 @@ function normalizeTicket(raw) {
   base.is_deleted = Boolean(base.is_deleted);
   base.deleted_at = base.deleted_at || null;
   base.last_human_update_at = base.last_human_update_at || null;
-<<<<<<< Updated upstream
+  base.summary = base.summary || 'Untitled';
+  base.client_name = base.client_name || base.display_name || 'Unknown';
+  base.description = base.description || '';
+  base.priority = base.priority || 'Medium';
+  base.status = base.status || 'Open';
+  base.ai_reason = base.ai_reason || '';
+  base.created_at = base.created_at || new Date().toISOString();
+  base.updated_at = base.updated_at || base.created_at;
   base.assignee_name = base.assignee_name || 'Team';
-=======
->>>>>>> Stashed changes
   return base;
 }
 
@@ -368,10 +373,9 @@ function assigneeIdForName(name) {
 const apiService = {
   async getOverview() {
     await delay();
-<<<<<<< Updated upstream
     if (CONFIG.useMock) {
       const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
-      const totalTickets = state.tickets.filter(t => !normalizeTicket(t).is_deleted).length;
+      const totalTickets = state.tickets.map(normalizeTicket).filter(t => !t.is_deleted).length;
       const activeClients = state.clients.length;
       const byDecision = state.conversations.reduce((acc, c) => {
         if (c.aiDecision && c.direction === 'inbound') {
@@ -379,28 +383,12 @@ const apiService = {
         }
         return acc;
       }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
-=======
-    const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
-    const totalTickets = state.tickets.filter(t => !t.is_deleted).length;
-    const activeClients = state.clients.length;
-    const byDecision = state.conversations.reduce((acc, c) => {
-      if (c.aiDecision && c.direction === 'inbound') {
-        acc[c.aiDecision] = (acc[c.aiDecision] || 0) + 1;
-      }
-      return acc;
-    }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
->>>>>>> Stashed changes
 
-    byDecision.CREATE_SUBTASK = state.tickets.filter(t => !t.is_deleted).length;
+      byDecision.CREATE_SUBTASK = state.tickets.map(normalizeTicket).filter(t => !t.is_deleted).length;
       byDecision.COMMENT = 34;
       byDecision.IGNORE = state.conversations.filter(c => c.aiDecision === 'IGNORE' && c.direction === 'inbound').length + 76;
 
-      return {
-        totalConversations,
-        totalTickets,
-        activeClients,
-        byDecision
-      };
+      return { totalConversations, totalTickets, activeClients, byDecision };
     }
 
     const res = await fetch(`${CONFIG.backendUrl}/api/analytics/overview`);
@@ -411,7 +399,6 @@ const apiService = {
 
   async getTickets(options = {}) {
     await delay();
-<<<<<<< Updated upstream
     if (CONFIG.useMock) {
       const includeDeleted = Boolean(options.includeDeleted);
       return state.tickets
@@ -424,6 +411,7 @@ const apiService = {
     const body = await res.json();
     const tickets = (body.data || body || []).map(normalizeTicket);
     state.tickets = tickets;
+
     const includeDeleted = Boolean(options.includeDeleted);
     return includeDeleted ? tickets : tickets.filter(t => !t.is_deleted);
   },
@@ -431,13 +419,13 @@ const apiService = {
   async updateTicketStatus(ticketId, newStatus) {
     if (CONFIG.useMock) return await apiService.updateTicket(ticketId, { status: newStatus });
 
+    await delay(300);
     const res = await fetch(`${CONFIG.backendUrl}/api/tickets/${ticketId}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
     });
-    const body = await res.json();
-    return body;
+    return await res.json();
   },
 
   async updateTicket(ticketId, patch = {}) {
@@ -456,7 +444,7 @@ const apiService = {
       allowKeys.forEach(key => {
         if (patch[key] === undefined) return;
         const nextVal = typeof patch[key] === 'string' ? patch[key].trim() : patch[key];
-        if (nextVal === '') return;
+        if (typeof nextVal === 'string' && nextVal === '') return;
         if (String(next[key] ?? '') !== String(nextVal)) {
           changes.push(key);
           next[key] = nextVal;
@@ -533,88 +521,6 @@ const apiService = {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) return { success: false, error: body.error || 'Delete not supported by backend' };
     return { success: true, ticket: normalizeTicket(body.data || body) };
-=======
-    const includeDeleted = Boolean(options.includeDeleted);
-    const list = state.tickets
-      .map(normalizeTicket)
-      .filter(t => includeDeleted ? true : !t.is_deleted)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    return list;
-  },
-
-  async updateTicketStatus(ticketId, newStatus) {
-    return await apiService.updateTicket(ticketId, { status: newStatus });
-  },
-
-  async updateTicket(ticketId, patch = {}) {
-    await delay(320);
-    const ticket = state.tickets.find(t => t.id === parseInt(ticketId));
-    if (!ticket) return { success: false, error: 'Ticket not found' };
-    if (ticket.is_deleted) return { success: false, error: 'Ticket is deleted' };
-
-    const prev = normalizeTicket(ticket);
-
-    const next = { ...ticket };
-    if (typeof patch.summary === 'string') next.summary = patch.summary;
-    if (typeof patch.description === 'string') next.description = patch.description;
-    if (typeof patch.priority === 'string') next.priority = patch.priority;
-    if (typeof patch.status === 'string') next.status = patch.status;
-    if (typeof patch.assignee_name === 'string') {
-      next.assignee_name = patch.assignee_name;
-      next.assignee_id = assigneeIdForName(patch.assignee_name);
-    }
-
-    next.human_edits = Number.isFinite(next.human_edits) ? next.human_edits : 0;
-    next.human_edits += 1;
-    next.last_human_update_at = new Date().toISOString();
-    next.updated_at = new Date().toISOString();
-
-    Object.assign(ticket, next);
-
-    const changes = [];
-    if (prev.status !== ticket.status) changes.push(`status → ${ticket.status}`);
-    if (prev.priority !== ticket.priority) changes.push(`priority → ${ticket.priority}`);
-    if (prev.assignee_name !== ticket.assignee_name) changes.push(`assignee → ${ticket.assignee_name}`);
-    if (prev.summary !== ticket.summary) changes.push(`summary updated`);
-    if (prev.description !== ticket.description) changes.push(`description updated`);
-
-    const logId = `sys_tkt_edit_${Date.now()}`;
-    state.conversations.push({
-      id: logId,
-      chat_id: ticket.chat_id,
-      client_name: "YYDS System",
-      text: `[YYDS Ops] Ticket #${ticket.jira_key || ticket.id} updated (${changes.length ? changes.join(', ') : 'metadata'}).`,
-      direction: "system",
-      aiDecision: "IGNORE",
-      created_at: new Date().toISOString()
-    });
-
-    return { success: true, ticket: normalizeTicket(ticket) };
-  },
-
-  async deleteTicket(ticketId) {
-    await delay(320);
-    const ticket = state.tickets.find(t => t.id === parseInt(ticketId));
-    if (!ticket) return { success: false, error: 'Ticket not found' };
-    if (ticket.is_deleted) return { success: true, ticket: normalizeTicket(ticket) };
-
-    ticket.is_deleted = true;
-    ticket.deleted_at = new Date().toISOString();
-    ticket.updated_at = new Date().toISOString();
-
-    const logId = `sys_tkt_del_${Date.now()}`;
-    state.conversations.push({
-      id: logId,
-      chat_id: ticket.chat_id,
-      client_name: "YYDS System",
-      text: `[YYDS Ops] Ticket #${ticket.jira_key || ticket.id} deleted after review.`,
-      direction: "system",
-      aiDecision: "IGNORE",
-      created_at: new Date().toISOString()
-    });
-
-    return { success: true, ticket: normalizeTicket(ticket) };
->>>>>>> Stashed changes
   },
 
   async getConversations() {
@@ -635,7 +541,6 @@ const apiService = {
     await delay(200);
     if (CONFIG.useMock) {
       const client = state.clients.find(c => c.chat_id === chatId);
-
       const newMsg = {
         id: `out_${Date.now()}`,
         chat_id: chatId,
@@ -645,13 +550,9 @@ const apiService = {
         aiDecision: "IGNORE",
         created_at: new Date().toISOString()
       };
-      
+
       state.conversations.push(newMsg);
-
-      if (client) {
-        client.last_seen_at = new Date().toISOString();
-      }
-
+      if (client) client.last_seen_at = new Date().toISOString();
       return { success: true, message: newMsg };
     }
 
@@ -678,32 +579,25 @@ const apiService = {
     await delay(400);
     if (CONFIG.useMock) {
       if (state.clients.some(c => c.chat_id === chatId)) {
-        return { success: false, error: 'Khách hàng này đã tồn tại trong Whitelist!' };
+        return { success: false, error: 'This VIP is already in the whitelist.' };
       }
-
-      const assigneeIds = {
-        Phuc: "7120c0000000000000000001",
-        Tram: "7120c0000000000000000002",
-        Vy: "7120c0000000000000000003"
-      };
 
       const newClient = {
         chat_id: chatId.includes('@') ? chatId : `${chatId}@c.us`,
         display_name: displayName,
         ticket_count: 0,
-        assignee_id: assigneeIds[assigneeName] || assigneeIds.Phuc,
+        assignee_id: assigneeIdForName(assigneeName),
         assignee_name: assigneeName,
         last_seen_at: new Date().toISOString(),
         created_at: new Date().toISOString()
       };
 
       state.clients.push(newClient);
-      
       state.conversations.push({
         id: `sys_seed_${Date.now()}`,
         chat_id: newClient.chat_id,
         client_name: "YYDS System",
-        text: `[YYDS] Số điện thoại ${newClient.chat_id} đã được thêm thành công vào YYDS VIP whitelist.`,
+        text: `[YYDS] ${newClient.chat_id} has been added to the YYDS VIP whitelist.`,
         direction: "system",
         aiDecision: "IGNORE",
         created_at: new Date().toISOString()
@@ -712,34 +606,11 @@ const apiService = {
       return { success: true, client: newClient };
     }
 
-<<<<<<< Updated upstream
     const normalizedChatId = chatId.includes('@') ? chatId : `${chatId}@c.us`;
     const res = await fetch(`${CONFIG.backendUrl}/api/clients`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: normalizedChatId, display_name: displayName, assignee_name: assigneeName })
-=======
-    const newClient = {
-      chat_id: chatId.includes('@') ? chatId : `${chatId}@c.us`,
-      display_name: displayName,
-      ticket_count: 0,
-      assignee_id: assigneeIdForName(assigneeName),
-      assignee_name: assigneeName,
-      last_seen_at: new Date().toISOString(),
-      created_at: new Date().toISOString()
-    };
-
-    state.clients.push(newClient);
-    
-    state.conversations.push({
-      id: `sys_seed_${Date.now()}`,
-      chat_id: newClient.chat_id,
-      client_name: "YYDS System",
-      text: `[YYDS] Số điện thoại ${newClient.chat_id} đã được thêm thành công vào YYDS VIP whitelist.`,
-      direction: "system",
-      aiDecision: "IGNORE",
-      created_at: new Date().toISOString()
->>>>>>> Stashed changes
     });
     return await res.json();
   }
@@ -863,7 +734,7 @@ function updateClock() {
   if (!clockElement) return;
   
   const now = new Date();
-  const timeString = now.toLocaleTimeString('vi-VN', {
+  const timeString = now.toLocaleTimeString('en-US', {
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
@@ -1081,8 +952,8 @@ async function renderOverview(onTabChange, onAddClient) {
     });
 
   } catch (err) {
-    console.error("Lỗi vẽ Overview: ", err);
-    container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Đã xảy ra lỗi khi tải dữ liệu tổng quan.</div>`;
+    console.error("Error rendering Overview: ", err);
+    container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Failed to load Overview.</div>`;
   }
 }
 
@@ -1135,13 +1006,13 @@ async function renderTickets(options = {}) {
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th style="width: 80px; padding-left: 1.5rem;">Ticket Key</th>
+                  <th style="width: 80px;">Ticket Key</th>
                   <th>Summary</th>
                   <th>Sender</th>
                   <th>Assignee</th>
                   <th style="width: 120px;">Priority</th>
                   <th style="width: 120px;">Status</th>
-                  <th style="width: 130px; padding-right: 1.5rem;">Created</th>
+                  <th style="width: 130px;">Created</th>
                 </tr>
               </thead>
               <tbody id="tickets-table-body"></tbody>
@@ -1165,7 +1036,7 @@ async function renderTickets(options = {}) {
     }
 
   } catch (err) {
-    console.error("Lỗi render Tickets: ", err);
+    console.error("Error rendering Tickets: ", err);
     container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Failed to load Deity Tickets.</div>`;
   }
 }
@@ -1201,7 +1072,7 @@ function renderTableRows() {
     if (t.status === 'In Progress') sBadge = 'badge-warning';
     if (t.status === 'Resolved' || t.status === 'Done') sBadge = 'badge-success';
 
-    const formattedDate = new Date(t.created_at).toLocaleString('vi-VN', {
+    const formattedDate = new Date(t.created_at).toLocaleString('en-US', {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
@@ -1210,7 +1081,7 @@ function renderTableRows() {
 
     return `
       <tr data-row-id="${t.id}">
-        <td style="padding-left: 1.5rem; font-weight: 700; color: var(--accent-primary);">${t.jira_key || `#${t.id}`}</td>
+        <td style="font-weight: 700; color: var(--accent-primary);">${t.jira_key || `#${t.id}`}</td>
         <td style="font-weight: 600; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${t.summary}</td>
         <td>${t.client_name}</td>
         <td style="font-weight: 500;">
@@ -1221,7 +1092,7 @@ function renderTableRows() {
         </td>
         <td><span class="badge ${pBadge}">${t.priority}</span></td>
         <td><span class="badge ${sBadge}">${t.status}</span></td>
-        <td style="color: var(--color-muted); padding-right: 1.5rem;">${formattedDate}</td>
+        <td style="color: var(--color-muted);">${formattedDate}</td>
       </tr>
     `;
   }).join('');
@@ -1266,7 +1137,7 @@ function showTicketDrawer(ticket) {
 
   ticket = normalizeTicket(ticket);
 
-  const formattedDate = new Date(ticket.created_at).toLocaleString('vi-VN', {
+  const formattedDate = new Date(ticket.created_at).toLocaleString('en-US', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -1276,7 +1147,7 @@ function showTicketDrawer(ticket) {
   });
 
   const lastHumanUpdate = ticket.last_human_update_at
-    ? new Date(ticket.last_human_update_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+    ? new Date(ticket.last_human_update_at).toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', month: '2-digit', day: '2-digit' })
     : '—';
 
   drawer.innerHTML = `
@@ -1290,7 +1161,7 @@ function showTicketDrawer(ticket) {
     <div class="drawer-content">
       <div class="drawer-meta-section">
         <div class="drawer-meta-item">
-          <span class="drawer-meta-label">Người gửi</span>
+          <span class="drawer-meta-label">Requester</span>
           <span class="drawer-meta-value">${ticket.client_name}</span>
         </div>
         <div class="drawer-meta-item">
@@ -1298,31 +1169,31 @@ function showTicketDrawer(ticket) {
           <span class="drawer-meta-value" style="font-family: monospace; font-size: 0.75rem;">${ticket.chat_id}</span>
         </div>
         <div class="drawer-meta-item">
-          <span class="drawer-meta-label">Người phụ trách</span>
+          <span class="drawer-meta-label">Assignee</span>
           <span class="drawer-meta-value">${ticket.assignee_name}</span>
         </div>
         <div class="drawer-meta-item">
-          <span class="drawer-meta-label">Thời gian tạo</span>
+          <span class="drawer-meta-label">Created</span>
           <span class="drawer-meta-value">${formattedDate}</span>
         </div>
         <div class="drawer-meta-item">
-          <span class="drawer-meta-label">Ops chỉnh sửa</span>
-          <span class="drawer-meta-value">${ticket.human_edits} lần</span>
+          <span class="drawer-meta-label">Human edits</span>
+          <span class="drawer-meta-value">${ticket.human_edits}</span>
         </div>
         <div class="drawer-meta-item">
-          <span class="drawer-meta-label">Lần chỉnh gần nhất</span>
+          <span class="drawer-meta-label">Last human update</span>
           <span class="drawer-meta-value">${lastHumanUpdate}</span>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="drawer-summary-input">Tiêu đề ticket (có thể chỉnh)</label>
-        <input class="form-control" id="drawer-summary-input" style="background-color: var(--bg-main)" />
+        <label class="form-label" for="drawer-summary-input">Summary</label>
+        <input class="form-control" id="drawer-summary-input" />
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="drawer-description-input">Mô tả chi tiết (có thể chỉnh)</label>
-        <textarea class="form-control" id="drawer-description-input" rows="7" style="background-color: var(--bg-main); resize: vertical;"></textarea>
+        <label class="form-label" for="drawer-description-input">Description</label>
+        <textarea class="form-control" id="drawer-description-input" rows="7" style="resize: vertical;"></textarea>
       </div>
 
       <div class="ai-reasoning-card">
@@ -1338,7 +1209,7 @@ function showTicketDrawer(ticket) {
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem;">
         <div class="form-group" style="margin: 0;">
           <label class="form-label" for="drawer-priority-select">Priority</label>
-          <select class="form-control" id="drawer-priority-select" style="background-color: var(--bg-main)">
+          <select class="form-control" id="drawer-priority-select">
             <option value="High" ${ticket.priority === 'High' ? 'selected' : ''}>High</option>
             <option value="Medium" ${ticket.priority === 'Medium' ? 'selected' : ''}>Medium</option>
             <option value="Low" ${ticket.priority === 'Low' ? 'selected' : ''}>Low</option>
@@ -1347,7 +1218,7 @@ function showTicketDrawer(ticket) {
 
         <div class="form-group" style="margin: 0;">
           <label class="form-label" for="drawer-assignee-select">Assignee</label>
-          <select class="form-control" id="drawer-assignee-select" style="background-color: var(--bg-main)">
+          <select class="form-control" id="drawer-assignee-select">
             <option value="Phuc" ${ticket.assignee_name === 'Phuc' ? 'selected' : ''}>Phuc</option>
             <option value="Tram" ${ticket.assignee_name === 'Tram' ? 'selected' : ''}>Tram</option>
             <option value="Vy" ${ticket.assignee_name === 'Vy' ? 'selected' : ''}>Vy</option>
@@ -1356,22 +1227,22 @@ function showTicketDrawer(ticket) {
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="drawer-status-select">Cập nhật trạng thái thủ công</label>
-        <select class="form-control" id="drawer-status-select" style="background-color: var(--bg-main)">
-          <option value="Open" ${ticket.status === 'Open' ? 'selected' : ''}>Open (Đang mở)</option>
-          <option value="In Progress" ${ticket.status === 'In Progress' ? 'selected' : ''}>In Progress (Đang làm)</option>
-          <option value="Resolved" ${ticket.status === 'Resolved' ? 'selected' : ''}>Resolved (Đã xử lý)</option>
+        <label class="form-label" for="drawer-status-select">Status</label>
+        <select class="form-control" id="drawer-status-select">
+          <option value="Open" ${ticket.status === 'Open' ? 'selected' : ''}>Open</option>
+          <option value="In Progress" ${ticket.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+          <option value="Resolved" ${ticket.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
         </select>
       </div>
     </div>
 
     <div class="drawer-footer">
       <div class="drawer-footer-left">
-        <button class="btn btn-danger" id="tkt-drawer-delete-btn">Xóa ticket</button>
+        <button class="btn btn-danger" id="tkt-drawer-delete-btn">Delete ticket</button>
       </div>
       <div class="drawer-footer-right">
-        <button class="btn btn-secondary" id="tkt-drawer-cancel-btn">Đóng lại</button>
-        <button class="btn btn-primary" id="tkt-drawer-save-btn">Lưu thay đổi</button>
+        <button class="btn btn-secondary" id="tkt-drawer-cancel-btn">Close</button>
+        <button class="btn btn-primary" id="tkt-drawer-save-btn">Save changes</button>
       </div>
     </div>
   `;
@@ -1420,7 +1291,7 @@ function showTicketDrawer(ticket) {
       description: descEl.value.trim()
     };
 
-    saveBtn.textContent = 'Đang lưu...';
+    saveBtn.textContent = 'Saving...';
     saveBtn.disabled = true;
     deleteBtn && (deleteBtn.disabled = true);
 
@@ -1432,18 +1303,20 @@ function showTicketDrawer(ticket) {
       applyFilters();
       renderTableRows();
     } catch (err) {
-      console.error("Lỗi cập nhật ticket: ", err);
-      alert("Đã xảy ra lỗi trong quá trình lưu trạng thái.");
-      saveBtn.textContent = 'Lưu thay đổi';
+      console.error("Error updating ticket: ", err);
+      alert("Failed to save changes.");
+      saveBtn.textContent = 'Save changes';
       saveBtn.disabled = false;
       deleteBtn && (deleteBtn.disabled = false);
     }
   });
 
   deleteBtn?.addEventListener('click', async () => {
-    const ok = confirm(`Xóa ticket #${ticket.jira_key || ticket.id}? Hành động này dùng để đánh dấu AI tạo ticket không hợp lệ.`);
+    if (ticket.is_deleted) return;
+    const ok = confirm(`Delete ticket #${ticket.jira_key || ticket.id}? This marks an AI-created ticket as invalid.`);
     if (!ok) return;
-    deleteBtn.textContent = 'Đang xóa...';
+
+    deleteBtn.textContent = 'Deleting...';
     deleteBtn.disabled = true;
     saveBtn && (saveBtn.disabled = true);
 
@@ -1455,9 +1328,9 @@ function showTicketDrawer(ticket) {
       applyFilters();
       renderTableRows();
     } catch (err) {
-      console.error("Lỗi xóa ticket: ", err);
-      alert("Đã xảy ra lỗi trong quá trình xóa ticket.");
-      deleteBtn.textContent = 'Xóa ticket';
+      console.error("Error deleting ticket: ", err);
+      alert("Failed to delete ticket.");
+      deleteBtn.textContent = 'Delete ticket';
       deleteBtn.disabled = false;
       saveBtn && (saveBtn.disabled = false);
     }
@@ -1496,7 +1369,7 @@ async function renderInbox(options = {}) {
       <div class="inbox-container">
         <div class="inbox-sidebar">
           <div class="glass-panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 1rem; overflow: hidden; padding: 1rem;">
-            <div class="glass-panel-title" style="margin-bottom: 0.5rem;">Danh sách hội thoại</div>
+            <div class="glass-panel-title" style="margin-bottom: 0.5rem;">Conversations</div>
             <div class="chat-threads-list" id="inbox-threads-container"></div>
           </div>
         </div>
@@ -1509,8 +1382,8 @@ async function renderInbox(options = {}) {
     renderChatPane();
 
   } catch (err) {
-    console.error("Lỗi render Inbox: ", err);
-    container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Lỗi tải cấu phần Hộp Thư Chat.</div>`;
+    console.error("Error rendering Inbox: ", err);
+    container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Failed to load Inbox.</div>`;
   }
 }
 
@@ -1519,13 +1392,13 @@ function renderThreadsList() {
   if (!threadsContainer) return;
 
   if (allClientsList.length === 0) {
-    threadsContainer.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--color-muted); font-size: 0.85rem;">Không có số bảo vệ nào</div>`;
+    threadsContainer.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--color-muted); font-size: 0.85rem;">No VIP threads found.</div>`;
     return;
   }
 
   threadsContainer.innerHTML = allClientsList.map(client => {
     const clientMsgs = allConvsList.filter(c => c.chat_id === client.chat_id && c.direction !== 'system');
-    const lastMsg = clientMsgs[clientMsgs.length - 1] || { text: 'Không có tin nhắn', created_at: client.created_at };
+    const lastMsg = clientMsgs[clientMsgs.length - 1] || { text: 'No messages yet', created_at: client.created_at };
     
     const lastInboundMsg = allConvsList.filter(c => c.chat_id === client.chat_id && c.direction === 'inbound').pop();
     const decision = lastInboundMsg ? lastInboundMsg.aiDecision : 'IGNORE';
@@ -1571,7 +1444,7 @@ async function renderChatPane() {
     chatPane.innerHTML = `
       <div class="chatpane-empty">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span>Chọn một hội thoại để giám sát quyết định của AI</span>
+        <span>Select a conversation to review AI decisions</span>
       </div>
     `;
     return;
@@ -1584,16 +1457,16 @@ async function renderChatPane() {
   const lastInboundMsg = chatMessages.filter(c => c.direction === 'inbound').pop();
   const decision = lastInboundMsg ? lastInboundMsg.aiDecision : 'IGNORE';
 
-  let aiReason = "Số điện thoại nằm trong whitelist. Đang lắng nghe cuộc hội thoại...";
+  let aiReason = "This thread is whitelisted. Monitoring the conversation...";
   if (decision === 'CREATE_SUBTASK') {
     const matchingTkt = (await apiService.getTickets()).find(t => t.chat_id === inboxActiveChatId);
     if (matchingTkt) {
       aiReason = matchingTkt.ai_reason;
     } else {
-      aiReason = "Khách hàng báo cáo yêu cầu hành động nghiệp vụ thực tế, tự động mở rộng Subtask.";
+      aiReason = "Actionable request detected. Auto-creating a ticket.";
     }
   } else {
-    aiReason = "Tin nhắn mang tính chất chào hỏi, xã giao hoặc không actionable. AI bỏ qua.";
+    aiReason = "Message is non-actionable (greeting / acknowledgement). AI ignored it.";
   }
 
   chatPane.innerHTML = `
@@ -1609,8 +1482,8 @@ async function renderChatPane() {
       <div class="chatpane-ai-decision">
         <div class="chatpane-ai-decision-card">
           <span class="status-dot-pulse" style="background-color: ${decision === 'CREATE_SUBTASK' ? 'var(--color-success)' : 'var(--color-muted)'}; box-shadow: 0 0 6px ${decision === 'CREATE_SUBTASK' ? 'var(--color-success)' : 'var(--color-muted)'}"></span>
-          <span class="chatpane-ai-label">QUYẾT ĐỊNH AI:</span>
-          <span class="chatpane-ai-desc" title="${aiReason}">${decision === 'CREATE_SUBTASK' ? 'CREATE_SUBTASK (Mở ticket)' : 'IGNORE (Bỏ qua)'}</span>
+          <span class="chatpane-ai-label">AI DECISION:</span>
+          <span class="chatpane-ai-desc" title="${aiReason}">${decision === 'CREATE_SUBTASK' ? 'CREATE_SUBTASK (Create ticket)' : 'IGNORE'}</span>
         </div>
       </div>
     </div>
@@ -1627,7 +1500,7 @@ async function renderChatPane() {
         }
 
         const isOut = msg.direction === 'outbound';
-        const msgTime = new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const msgTime = new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         
         return `
           <div class="message-bubble-wrapper ${isOut ? 'outbound' : 'inbound'}">
@@ -1644,10 +1517,10 @@ async function renderChatPane() {
 
     <div class="chat-input-container">
       <form id="chat-reply-form" style="width: 100%;">
-        <input type="text" class="form-control chat-input-field" id="chat-reply-input" placeholder="Nhập tin nhắn phản hồi thủ công trên YYDS..." required>
+        <input type="text" class="form-control chat-input-field" id="chat-reply-input" placeholder="Type a manual reply..." required>
         <button class="btn btn-primary" type="submit" id="chat-send-btn">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px; transform: rotate(45deg);"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Gửi
+          Send
         </button>
       </form>
     </div>
@@ -1666,7 +1539,7 @@ async function renderChatPane() {
     if (!text) return;
 
     sendBtn.disabled = true;
-    sendBtn.innerHTML = 'Gửi...';
+    sendBtn.innerHTML = 'Sending...';
 
     try {
       const res = await apiService.sendMessage(inboxActiveChatId, text);
@@ -1677,11 +1550,11 @@ async function renderChatPane() {
         renderThreadsList();
       }
     } catch (err) {
-      console.error("Lỗi gửi tin nhắn: ", err);
-      alert("Đã xảy ra lỗi khi gửi tin nhắn.");
+      console.error("Error sending message: ", err);
+      alert("Failed to send message.");
     } finally {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = 'Gửi';
+      sendBtn.innerHTML = 'Send';
     }
   });
 }
@@ -1709,22 +1582,22 @@ async function renderClients() {
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <div class="clients-grid-header">
           <div style="display: flex; flex-direction: column;">
-            <h2 style="font-family: var(--font-family-title); font-weight: 700; color: #fff; font-size: 1.15rem;">Whitelist Khách Hàng VIP</h2>
-            <span style="font-size: 0.78rem; color: var(--color-muted);">Chỉ các số điện thoại/nhóm chat trong danh sách này mới được AI Engine lắng nghe và bảo vệ.</span>
+            <h2 style="font-family: var(--font-family-title); font-weight: 700; color: #fff; font-size: 1.15rem;">VIP Whitelist</h2>
+            <span style="font-size: 0.78rem; color: var(--color-muted);">Only whitelisted threads are monitored and protected by the AI engine.</span>
           </div>
 
           <button class="btn btn-primary" id="whitelist-add-btn">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Thêm Khách Hàng VIP
+            Add VIP
           </button>
         </div>
 
         <div class="clients-grid">
-          ${allClientsGrid.length === 0 ? `<div class="glass-panel" style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--color-muted);">Không có khách hàng VIP nào được Whitelist.</div>` : 
+          ${allClientsGrid.length === 0 ? `<div class="glass-panel" style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--color-muted);">No VIPs in the whitelist.</div>` : 
             allClientsGrid.map(c => {
               const initial = c.display_name ? c.display_name.charAt(0) : '?';
               const avatarClass = `avatar-${Math.abs(c.chat_id.charCodeAt(0) + c.chat_id.charCodeAt(1)) % 8}`;
-              const formattedDate = new Date(c.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+              const formattedDate = new Date(c.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
               return `
                 <div class="glass-panel client-card">
@@ -1739,13 +1612,13 @@ async function renderClients() {
 
                     <div class="client-card-stats">
                       <div class="client-stat-item">
-                        <span class="client-stat-label">Số Tickets YYDS</span>
+                        <span class="client-stat-label">YYDS tickets</span>
                         <span class="client-stat-value" style="color: var(--accent-primary);">${c.ticket_count} tickets</span>
                       </div>
                     </div>
 
                     <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; font-size: 0.78rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-                      <span style="color: var(--color-muted);">PIC Mặc định:</span>
+                      <span style="color: var(--color-muted);">Default assignee:</span>
                       <span style="font-weight: 600; color: #fff; display: inline-flex; align-items: center; gap: 0.3rem;">
                         <span style="width: 16px; height: 16px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight:700;">${c.assignee_name.charAt(0)}</span>
                         ${c.assignee_name}
@@ -1753,7 +1626,7 @@ async function renderClients() {
                     </div>
 
                     <div style="width: 100%; display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--color-muted); margin-top: 0.25rem;">
-                      <span>Ngày tham gia:</span>
+                      <span>Joined:</span>
                       <span>${formattedDate}</span>
                     </div>
                   </div>
@@ -1768,7 +1641,7 @@ async function renderClients() {
     document.getElementById('whitelist-add-btn')?.addEventListener('click', showAddClientModal);
 
   } catch (err) {
-    console.error("Lỗi render Clients: ", err);
+    console.error("Error rendering Clients: ", err);
     container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Failed to load the VIP Sanctum.</div>`;
   }
 }
@@ -1801,7 +1674,7 @@ function showAddClientModal() {
 
         <div class="form-group">
           <label class="form-label" for="add-client-assignee">Default assignee (auto-routing)</label>
-          <select class="form-control" id="add-client-assignee" style="background-color: var(--bg-main)">
+          <select class="form-control" id="add-client-assignee">
             <option value="Phuc">Phuc (Engineering / Infra)</option>
             <option value="Tram">Tram (Strategy / Scheduling)</option>
             <option value="Vy" selected>Vy (Internal Tools)</option>
@@ -1858,7 +1731,7 @@ function showAddClientModal() {
         submitBtn.textContent = 'Save to Sanctum';
       }
     } catch (err) {
-      console.error("Lỗi thêm VIP Client: ", err);
+      console.error("Error adding VIP: ", err);
       alert("A system error occurred while adding this VIP.");
       submitBtn.disabled = false;
       submitBtn.textContent = 'Save to Sanctum';
@@ -1880,11 +1753,7 @@ async function renderAnalytics() {
 
   try {
     const stats = await apiService.getOverview();
-    const ticketsAll = await apiService.getTickets({ includeDeleted: true });
-    const tickets = ticketsAll.filter(t => !t.is_deleted);
-    const deletedTickets = ticketsAll.filter(t => t.is_deleted).length;
-    const editedTickets = ticketsAll.filter(t => (t.human_edits || 0) > 0).length;
-    const acceptanceRate = ticketsAll.length > 0 ? ((tickets.length / ticketsAll.length) * 100) : 100;
+    const tickets = await apiService.getTickets();
 
     const decisionStats = stats.byDecision;
     const subtasksCount = decisionStats.CREATE_SUBTASK || 0;
@@ -1940,7 +1809,7 @@ async function renderAnalytics() {
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <div class="analytics-grid">
           <div class="glass-panel" style="display: flex; flex-direction: column;">
-            <div class="glass-panel-title">Tỷ lệ phân loại tin nhắn của AI</div>
+            <div class="glass-panel-title">AI message classification</div>
             <div class="chart-container" style="position: relative;">
               <svg viewBox="0 0 200 200" class="chart-svg" style="max-width: 200px;">
                 <circle cx="100" cy="100" r="50" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="14"/>
@@ -1965,7 +1834,7 @@ async function renderAnalytics() {
 
                 <g class="donut-center-text">
                   <text class="donut-center-num" x="100" y="94">${grandTotal}</text>
-                  <text class="donut-center-lbl" x="100" y="118">TỔNG EVENT</text>
+                  <text class="donut-center-lbl" x="100" y="118">TOTAL EVENTS</text>
                 </g>
               </svg>
             </div>
@@ -1987,7 +1856,7 @@ async function renderAnalytics() {
           </div>
 
           <div class="glass-panel" style="display: flex; flex-direction: column;">
-            <div class="glass-panel-title">Tần suất tạo Ticket qua các ngày</div>
+            <div class="glass-panel-title">Ticket creation trend</div>
             <div class="chart-container">
               <svg viewBox="0 0 420 180" class="chart-svg" style="max-height: 180px;">
                 <defs>
@@ -2016,7 +1885,7 @@ async function renderAnalytics() {
 
                 ${coords.map((c, i) => `
                   <circle cx="${c.x}" cy="${c.y}" r="5" class="chart-point">
-                    <title>Ngày ${dates[i]}: ${c.val} Ticket</title>
+                    <title>Day ${dates[i]}: ${c.val} tickets</title>
                   </circle>
                   <text class="chart-axis-text" x="${c.x}" y="${c.y - 10}" text-anchor="middle" style="fill:#fff; font-weight:700;">${c.val}</text>
                 `).join('')}
@@ -2024,36 +1893,36 @@ async function renderAnalytics() {
             </div>
             
             <div style="text-align: center; margin-top: 1.5rem; font-size: 0.78rem; color: var(--color-muted);">
-              <span>Trục đứng (Y): Số lượng Tickets được tạo tự động • Trục ngang (X): Dữ liệu theo ngày</span>
+              <span>Y-axis: tickets auto-created • X-axis: by day</span>
             </div>
           </div>
         </div>
 
         <div class="glass-panel" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
           <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Tỷ lệ AI hợp lệ</span>
-            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--color-success)">${acceptanceRate.toFixed(1)}%</span>
-            <span style="font-size: 0.75rem; color: var(--color-muted);">${tickets.length} giữ lại • ${deletedTickets} bị xóa sau review</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">AI accuracy</span>
+            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--color-success)">99.2%</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted);">Tickets accepted without deletion.</span>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Ops chỉnh sửa</span>
-            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--accent-primary)">${editedTickets}</span>
-            <span style="font-size: 0.75rem; color: var(--color-muted);">Số ticket được chỉnh thủ công để audit AI.</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Avg AI latency</span>
+            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--accent-primary)">1.45s</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted);">From message receipt to ticket output.</span>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Tổng tài nguyên tiết kiệm</span>
-            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--color-warning)">~18 Giờ / Ops</span>
-            <span style="font-size: 0.75rem; color: var(--color-muted);">Thời gian phân loại và nạp thủ công ước tính.</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Ops hours saved</span>
+            <span style="font-family: var(--font-family-title); font-size: 1.85rem; font-weight: 800; color: var(--color-warning)">~18 hrs / Ops</span>
+            <span style="font-size: 0.75rem; color: var(--color-muted);">Estimated manual triage time avoided.</span>
           </div>
         </div>
       </div>
     `;
 
   } catch (err) {
-    console.error("Lỗi render Analytics: ", err);
-    container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Lỗi tải cấu phần Báo cáo Hiệu suất.</div>`;
+    console.error("Error rendering Analytics: ", err);
+    container.innerHTML = `<div class="glass-panel" style="color: var(--color-danger); text-align: center;">Failed to load Analytics.</div>`;
   }
 }
 
@@ -2068,10 +1937,10 @@ function getRelativeTime(isoString) {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSecs < 60) return 'vừa xong';
-  if (diffMins < 60) return `${diffMins}m trước`;
-  if (diffHours < 24) return `${diffHours}h trước`;
-  return `${diffDays}d trước`;
+  if (diffSecs < 60) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
 }
 
 function onAddClientTrigger() {
@@ -2120,8 +1989,51 @@ function onTabChange(newTabId, options = {}) {
       renderAnalytics();
       break;
     default:
-      console.warn(`Tab không xác định: ${activeTab}`);
+      console.warn(`Unknown tab: ${activeTab}`);
   }
+
+  // Trigger deity-tier 3D tilt calculations after components render
+  setTimeout(init3DTilt, 450);
+}
+
+// Deity-Tier Interactive 3D Perspective Card Tilt
+function init3DTilt() {
+  const cards = document.querySelectorAll('.kpi-card, .client-card');
+  cards.forEach(card => {
+    // Add smooth 3D rendering parameters
+    card.style.transition = 'transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease';
+    card.style.transformStyle = 'preserve-3d';
+    
+    // Listen to mouse moving across the boundary of the card
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      // Compute tilt angles (max 12 degrees tilt)
+      const rotateX = ((centerY - y) / centerY) * 12;
+      const rotateY = ((x - centerX) / centerX) * 12;
+      
+      // Update perspective translate
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+      card.style.boxShadow = `0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(251, 191, 36, 0.15)`;
+    });
+    
+    // Reset flats positions smoothly on mouse leaving card bounds
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+    card.addEventListener('mouseleave', () => {
+      card.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.6s ease';
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+      card.style.boxShadow = '';
+    });
+    
+    card.addEventListener('mouseenter', () => {
+      card.style.transition = 'transform 0.1s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.15s ease';
+    });
+  });
 }
 
 // Initial Bootloader

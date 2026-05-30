@@ -96,3 +96,76 @@ Design a highly revolutionary, supreme-level Web Dashboard named "YYDS Deity-Ops
 
 ### B. Prompt Midjourney v6 / DALL-E 3 (Dành cho AI tạo ảnh nghệ thuật)
 > **Prompt:** `A revolutionary deity cyberpunk web dashboard interface mockup, named "YYDS Deity-Ops". Monolithic obsidian black theme background #020204 with floating golden light dust. Futuristic glassmorphism panels in deep dark color with 24px blur and glowing neon imperial gold and bright astral violet borders. Main area shows glowing golden KPI cards, holographic charts with gold line trends, and luxurious cybernetic avatars. Absolute premium, god-tier UI/UX design, next-gen dashboard concept, Behance trending, Dribbble elite showcase, dramatic golden backlighting, 8k, photorealistic --ar 16:9 --v 6.0`
+
+---
+
+## 💎 4. PROMPT TỐI ƯU UI/UX CHUẨN SẠCH (ULTRA-CLEAN & SPACING ENHANCEMENT)
+
+*Đây là prompt tối ưu hóa cao độ được thiết kế riêng cho **v0.dev** hoặc **Claude** để tái cấu trúc lại CSS/Layout của ứng dụng hiện tại, căn chỉnh lại khoảng trống (Spacing), kích thước (Sizes), bố cục thông thoáng (Clean/Minimalist) và các chuyển động vi mô (Micro-animations) theo chuẩn sản phẩm SaaS cao cấp trên thị trường.*
+
+```markdown
+Refactor and polish the UI/UX of the "YYDS Deity-Ops Console" to achieve an ultra-clean, pixel-perfect, premium SaaS standard. Optimize all layout sizes, whitespace spacing, typography scales, and implement professional micro-animations.
+
+### 📐 1. SPACING & SIZING RULES (8px Grid System):
+- **Layout Spacing:** Establish a rigorous 8px grid system. Use exactly 24px (1.5rem) padding for outer card boundaries and main workspace borders. Use 16px (1rem) for inner list cards, thread items, and form groups.
+- **Card Margins:** Set uniform gaps of 24px (1.5rem) between grids, columns, and flex sections to allow the interface to breathe (minimalist layout).
+- **Element Heights:** Standardize form inputs, select selectors, and action buttons to a clean 42px height. Badges should be compact (22px height, 12px text) with clear internal padding.
+- **Table Cell Padding:** Table rows should have 16px vertical padding and 20px horizontal padding to ensure comfortable scanning of text.
+- **Border Radius:** Apply modern curvature: 12px for standard cards, inputs, and buttons; 16px for larger dashboard containers; 8px for small badges and tags.
+
+### ✍️ 2. TYPOGRAPHY & VISUAL CLARITY:
+- **Clean Contrast:** Dark background must be solid deep charcoal/obsidian (#030712). Soften the glass panels to transparent deep gray (rgba(9, 9, 16, 0.5) with backdrop-filter: blur(20px)).
+- **Harsh Border Removal:** Reduce border opacity to super-fine translucent hair-lines (1px solid rgba(255, 255, 255, 0.04)). Avoid heavy solid borders.
+- **Text Scaling & Hierarchy:**
+  * Main View Titles: 1.5rem (24px), semi-bold, Outfit font.
+  * Card KPI stats numbers: 2.25rem (36px) or 2rem (32px), bold, clean glowing accent.
+  * Section Headers / Labels: 0.75rem (12px) uppercase, bold, wide letter-spacing (0.07em) in Cool Gray (#94a3b8) to separate sections cleanly.
+  * Body Text: 0.875rem (14px) Inter font, regular, line-height 1.5, with excellent color contrast (#e2e8f0).
+
+### 💫 3. PROFESSIONAL MICRO-INTERACTIONS & ANIMATIONS:
+- **Transitions:** Apply standard cubic-bezier curve transitions to all interactive triggers (buttons, sidebar menus, table rows, badges): `transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);`
+- **Sidebar Tab Highlighting:** Active sidebar tabs should feature a subtle left-aligned vertical glowing bar (2px width) in YYDS Gold, with a very soft, saturated golden background bleed.
+- **Table Row Hover States:** Hovering over list items or table rows should scale them up marginally (transform: translateY(-1px) scale(1.005)) with a soft glowing shadow drop rather than harsh solid background swaps.
+- **Right Details Drawer Animation:** Utilize CSS transform for slide-in effects: `transform: translateX(100%)` transitions smoothly to `transform: translateX(0)` over 300ms using a clean ease-out curve.
+- **Modal scaling popup:** Centered modals should pop using scale transition: `scale(0.95) -> scale(1)` with a smooth ease-out feel.
+- **Live pulse tags:** The live indicator dot should breathe smoothly using a keyframe opacity pulse (opacity 0.4 -> 1).
+
+Apply these precise structural sizing, spacing, and animation refinements to refactor the CSS and render templates for an elite, clean SaaS finish.
+```
+
+---
+
+## ⚡ 5. BỘ PROMPTS ANIMATION ĐỘT PHÁ TỐI THƯỢNG (DEITY-TIER INTERACTIVE EFFECTS)
+
+*Nếu bạn muốn giao diện của mình thực sự **"Bùng nổ" (Breakthrough)** tại Hackathon, hãy sử dụng bộ Prompts thiết kế các **Hiệu ứng Thần thoại Độc quyền** này. Nó biến một trang Admin thông thường thành một kiệt tác trải nghiệm sống động.*
+
+```markdown
+Refactor the CSS and JavaScript of the "YYDS Deity-Ops Console" to integrate mind-blowing, highly futuristic, interactive "Deity-Tier" animation effects. Elevate the UI/UX from passive clean dashboard to an interactive organic universe.
+
+### 🌟 EFFECT 1: INTERACTIVE 3D TILT PARALLAX CARD
+- Implement an interactive 3D tilt effect on the 4 KPI Cards and the VIP Client cards when hovered.
+- As the user moves their cursor over a card, the card should rotate dynamically in 3D space (`transform: rotateX() rotateY()`) corresponding to the relative cursor coordinates from the center of the card.
+- Add smooth momentum decay, ensuring the card returns softly to its flat default state when the mouse leaves.
+
+### ⚡ EFFECT 2: LASER BORDER SWEEP (NEON ENERGY FLOW)
+- Enhance the border hover effects on the main Glass panels.
+- Instead of a static border color change, hovering a card should trigger a **laser-like glowing gold-to-purple beam** that sweeps smoothly along the absolute border perimeter of the card, leaving a trailing tail.
+- Achieve this using custom CSS properties with a clipping mask or `conic-gradient` mapped on a pseudo-element (`::before`) animated via `@keyframes border-sweep`.
+
+### 🌌 EFFECT 3: ASTRAL ORBIT NEBULA PARALLAX (MOUSE SENSITIVE BACKGROUND)
+- The background star-field and golden nebulas should not be static.
+- Integrate a micro-parallax mouse listener. When the mouse moves across the screen, the background stardust layers and glowing nebulas should shift slowly and organically in the opposite direction (`transform: translate3d(x, y, 0)` with a multiplier of `0.02`), simulating deep spatial perspective.
+
+### 🌊 EFFECT 4: AI DECISIVE PORTAL SCAN SWEEP (TAB SWITCH PORTAL)
+- When the active tab switches, do not just fade the view in.
+- Trigger a **vertical glowing golden scan line** or a **radial energy ripple scan** that sweeps across the active canvas panel from top to bottom.
+- Use a transient pseudo-overlay with a linear gradient of gold light (`linear-gradient(to bottom, rgba(234, 179, 8, 0) 0%, rgba(234, 179, 8, 0.25) 50%, rgba(234, 179, 8, 0) 100%)`) running on a swift, smooth 600ms keyframe animation to make each tab transition feel like a portal gateway opening.
+
+### 💥 EFFECT 5: SYSTEM PIPELINE DECISION SHOCKWAVE (RIPPLE EFFECT)
+- In the Inbox console, when a new system log is printed (e.g. "[AI Engine] Creating ticket..."), the message log container should animate in with an expanding **radial shockwave ripple** (expanding circular outline shadow) that fades out seamlessly over 1s.
+- This creates an intense visual cue that the AI has executed a god-like automated action.
+
+Implement these interactive visual dynamics using vanilla CSS keyframes and lightweight, optimized pure JS event listeners for zero performance lag.
+```
+
+

@@ -1,4 +1,4 @@
-// Unified Data API Agent for DantaLabs Support Automation Dashboard
+// Unified Data API Agent for YYDS Deity-Ops Console
 // Supports local in-memory Mock State OR real Backend REST Endpoint mapping.
 
 import { mockOverview, mockClients, mockTickets, mockConversations } from './mock-data.js';
@@ -79,8 +79,8 @@ export const apiService = {
         state.conversations.push({
           id: logId,
           chat_id: ticket.chat_id,
-          client_name: "Hệ thống",
-          text: `[Ops Action] Trạng thái ticket #${ticket.jira_key || ticket.id} chuyển thành: ${newStatus}`,
+          client_name: "YYDS System",
+          text: `[YYDS Ops] Ticket #${ticket.jira_key || ticket.id} status updated to: ${newStatus}`,
           direction: "system",
           aiDecision: "IGNORE",
           created_at: new Date().toISOString()
@@ -115,12 +115,12 @@ export const apiService = {
     await delay(200);
     if (CONFIG.useMock) {
       const client = state.clients.find(c => c.chat_id === chatId);
-      const displayName = client ? client.display_name : "Khách hàng";
+      const displayName = client ? client.display_name : "Customer";
 
       const newMsg = {
         id: `out_${Date.now()}`,
         chat_id: chatId,
-        client_name: "Danta Labs Autoreply",
+        client_name: "YYDS Autoreply",
         text: text,
         direction: "outbound",
         aiDecision: "IGNORE",
@@ -164,7 +164,7 @@ export const apiService = {
     if (CONFIG.useMock) {
       // Validate duplicates
       if (state.clients.some(c => c.chat_id === chatId)) {
-        return { success: false, error: 'Khách hàng này đã tồn tại trong Whitelist!' };
+        return { success: false, error: 'This VIP is already in the whitelist.' };
       }
 
       const assigneeIds = {
@@ -189,8 +189,8 @@ export const apiService = {
       state.conversations.push({
         id: `sys_seed_${Date.now()}`,
         chat_id: newClient.chat_id,
-        client_name: "Hệ thống",
-        text: `[Hệ thống] Số điện thoại ${newClient.chat_id} đã được thêm thành công vào whitelist bảo vệ VIP.`,
+        client_name: "YYDS System",
+        text: `[YYDS] ${newClient.chat_id} has been added to the VIP whitelist.`,
         direction: "system",
         aiDecision: "IGNORE",
         created_at: new Date().toISOString()

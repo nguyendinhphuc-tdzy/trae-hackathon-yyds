@@ -29,7 +29,7 @@ const server = http.createServer((req, res) => {
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end('<h1 style="font-family:sans-serif; text-align:center; margin-top:4rem;">404 - Không tìm thấy trang</h1>', 'utf-8');
+      res.end('<h1 style="font-family:sans-serif; text-align:center; margin-top:4rem;">404 - Page not found</h1>', 'utf-8');
       return;
     }
 
@@ -39,7 +39,7 @@ const server = http.createServer((req, res) => {
     fs.readFile(filePath, (readErr, content) => {
       if (readErr) {
         res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end(`Lỗi máy chủ nội bộ: ${readErr.code}`);
+        res.end(`Internal server error: ${readErr.code}`);
       } else {
         res.writeHead(200, { 
           'Content-Type': contentType,
@@ -53,8 +53,8 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log('\n======================================================');
-  console.log(`🚀 YYDS Dashboard Server đang chạy tại:`);
+  console.log(`🚀 YYDS Dashboard Server is running at:`);
   console.log(`👉 http://localhost:${PORT}`);
   console.log('======================================================');
-  console.log('Nhấn Ctrl + C để dừng Server.\n');
+  console.log('Press Ctrl + C to stop the server.\n');
 });
