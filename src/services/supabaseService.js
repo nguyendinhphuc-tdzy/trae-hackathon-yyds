@@ -61,6 +61,25 @@ const supabaseService = {
     return data.map(t => `- [ID: ${t.id.substring(0, 8)}] ${t.summary}: ${t.status}`).join('\n');
   },
 
+  async getLatestOpenTicketId(chatId) {
+    const { data, error } = await supabase
+      .from('tickets')
+      .select('id')
+      .eq('chat_id', chatId)
+      .neq('status', 'Done')
+      .neq('status', 'Closed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching latest open ticket:', error);
+      return null;
+    }
+
+    return data?.id || null;
+  },
+
   // 5. Lưu hoặc cập nhật thông tin Client
   async upsertClient(chatId, displayName) {
     const { data, error } = await supabase

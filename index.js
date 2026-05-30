@@ -27,7 +27,7 @@ async function processInboundMessage(event) {
 
     // 3. AI Decision
     console.log(`[AI] Analyzing message from ${senderName}...`);
-    const aiDecision = await aiService.analyzeConversation(chatTranscript, ticketsContext, senderName);
+    const aiDecision = await aiService.analyzeConversation(chatTranscript, ticketsContext, senderName, text);
     console.log(`[AI] Decision: ${aiDecision.decision}`);
 
     let ticketId = null;
@@ -52,6 +52,31 @@ async function processInboundMessage(event) {
         await gmailService.sendTicketAlert(ticket);
         await whatsappNotifyService.sendClientConfirmation(waClient, chatId, senderName, ticket.id);
         await supabaseService.logAnalyticsEvent('ticket_created', { ticketId, chatId });
+      }
+    } else if (aiDecision.decision === 'COMMENT') {
+      ticketId = await supabaseService.getLatestOpenTicketId(chatId);
+      if (!ticketId) {
+        const summary = aiDecision.summary || 'Customer follow-up request';
+        const description = aiDecision.description || text || 'Customer follow-up request';
+        const ticket = await supabaseService.createTicket({
+          chatId,
+          clientName: senderName,
+          summary,
+          description,
+          priority: aiDecision.priority || 'Medium',
+          aiReason: aiDecision.reason,
+          assigneeId: aiDecision.assignee_id,
+          assigneeName: aiDecision.assignee_name
+        });
+        if (ticket) {
+          ticketId = ticket.id;
+          await whatsappNotifyService.sendInternalAlert(waClient, ticket);
+          await gmailService.sendTicketAlert(ticket);
+          await whatsappNotifyService.sendClientConfirmation(waClient, chatId, senderName, ticket.id);
+          await supabaseService.logAnalyticsEvent('ticket_created', { ticketId, chatId });
+        }
+      } else {
+        await supabaseService.logAnalyticsEvent('conversation_comment', { chatId, ticketId, reason: aiDecision.reason });
       }
     } else {
       await supabaseService.logAnalyticsEvent('conversation_ignored', { chatId, reason: aiDecision.reason });

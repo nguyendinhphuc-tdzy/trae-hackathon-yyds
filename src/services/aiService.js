@@ -14,6 +14,61 @@ function extractFirstJsonObject(text) {
   return text.slice(start, end + 1);
 }
 
+function sanitizeJsonForParse(text) {
+  const raw = typeof text === "string" ? text : "";
+  if (!raw) return "";
+
+  let out = "";
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+
+    if (!inString) {
+      if (ch === "\"") inString = true;
+      out += ch;
+      continue;
+    }
+
+    if (escaped) {
+      out += ch;
+      escaped = false;
+      continue;
+    }
+
+    if (ch === "\\") {
+      out += ch;
+      escaped = true;
+      continue;
+    }
+
+    if (ch === "\"") {
+      let j = i + 1;
+      while (j < raw.length && /\s/.test(raw[j])) j++;
+      const next = raw[j] || "";
+      if (next === "," || next === "}" || next === "]") {
+        inString = false;
+        out += ch;
+      } else {
+        out += "\\\"";
+      }
+      continue;
+    }
+
+    if (ch === "\n") {
+      out += "\\n";
+      continue;
+    }
+
+    if (ch === "\r") continue;
+
+    out += ch;
+  }
+
+  return out;
+}
+
 function isModelNotFoundError(error) {
   const status = Number(error?.status);
   const message = typeof error?.message === "string" ? error.message : "";
@@ -49,7 +104,9 @@ function normalizePriority(value) {
 
 function normalizeDecision(value) {
   const v = normalizeString(value).toUpperCase();
-  return v === "CREATE_SUBTASK" ? "CREATE_SUBTASK" : "IGNORE";
+  if (v === "CREATE_SUBTASK") return "CREATE_SUBTASK";
+  if (v === "COMMENT") return "COMMENT";
+  return "IGNORE";
 }
 
 function ensureDecisionShape(payload) {
@@ -57,12 +114,74 @@ function ensureDecisionShape(payload) {
   const reason =
     normalizeString(payload?.reason) ||
     (decision === "IGNORE" ? "Non-actionable message" : "No reason provided");
-  const summary = decision === "CREATE_SUBTASK" ? normalizeString(payload?.summary) : "";
-  const description = decision === "CREATE_SUBTASK" ? normalizeString(payload?.description) : "";
-  const priority = decision === "CREATE_SUBTASK" ? normalizePriority(payload?.priority) : "Medium";
+  const summary =
+    decision === "CREATE_SUBTASK" ? normalizeString(payload?.summary) :
+    decision === "COMMENT" ? (normalizeString(payload?.summary) || "Customer follow-up") :
+    "";
+  const description =
+    decision === "CREATE_SUBTASK" ? normalizeString(payload?.description) :
+    decision === "COMMENT" ? normalizeString(payload?.description) :
+    "";
+  const priority =
+    decision === "CREATE_SUBTASK" ? normalizePriority(payload?.priority) :
+    decision === "COMMENT" ? normalizePriority(payload?.priority) :
+    "Medium";
   const assignee_id = normalizeString(payload?.assignee_id) || "Phuc_ID";
 
   return { decision, reason, summary, description, priority, assignee_id };
+}
+
+function fallbackDecisionFromTranscript({ latestMessageText, compactTranscript }) {
+  const primary = normalizeString(latestMessageText);
+  const lines = normalizeString(compactTranscript).split(/\r?\n/).filter(Boolean);
+  const candidates = [
+    primary,
+    lines.slice(-1)[0] || "",
+    lines.reduce((best, cur) => (cur.length > best.length ? cur : best), "")
+  ].filter(Boolean);
+
+  const pick = candidates
+    .map((line) => line.replace(/^[^:]{1,60}:\s*/i, "").trim())
+    .find((line) => line.length > 0) || "";
+
+  const message = pick;
+  const lowered = message.toLowerCase();
+
+  const highSignals = ["urgent", "asap", "end of the day", "board", "meeting", "immediately"];
+  const actionableSignals = [
+    "issue",
+    "error",
+    "bug",
+    "failed",
+    "fail",
+    "can't",
+    "cannot",
+    "unable",
+    "not able",
+    "support",
+    "help",
+    "please check",
+    "update",
+    "progress",
+    "status",
+  ];
+
+  const isActionable = actionableSignals.some((k) => lowered.includes(k));
+  const isHigh = highSignals.some((k) => lowered.includes(k));
+
+  if (!isActionable) return { decision: "IGNORE", reason: "Non-actionable message" };
+
+  const summary = message ? message.slice(0, 120) : "Customer support request";
+  const description = message || "Customer support request";
+
+  return {
+    decision: "CREATE_SUBTASK",
+    reason: "AI output JSON parse failed; used safe fallback classification",
+    summary,
+    description,
+    priority: isHigh ? "High" : "Medium",
+    assignee_id: "Phuc_ID",
+  };
 }
 
 async function callOllama({ baseUrl, modelName, prompt }) {
@@ -93,7 +212,7 @@ async function callOllama({ baseUrl, modelName, prompt }) {
 }
 
 const aiService = {
-  async analyzeConversation(chatTranscript, ticketsContext, clientName) {
+  async analyzeConversation(chatTranscript, ticketsContext, clientName, latestMessageText) {
     const provider = normalizeString(process.env.AI_PROVIDER).toLowerCase() || "gemini";
     const transcriptLines = clampInt(process.env.AI_TRANSCRIPT_LINES, { min: 3, max: 30, fallback: 12 });
     const compactTranscript = tailLines(chatTranscript, transcriptLines);
@@ -116,15 +235,18 @@ ${ticketsContext || "No open tickets."}
 
 CUSTOMER NAME: ${clientName}
 
+LATEST MESSAGE:
+${normalizeString(latestMessageText) || "(not provided)"}
+
 CHAT HISTORY:
 ${compactTranscript}
 
 OUTPUT CONTRACT (JSON ONLY):
 {
-  "decision": "CREATE_SUBTASK | IGNORE",
+  "decision": "CREATE_SUBTASK | COMMENT | IGNORE",
   "reason": "Explain why you chose this decision (English)",
-  "summary": "Short ticket title (English, required if CREATE_SUBTASK)",
-  "description": "Detailed ticket description (English, required if CREATE_SUBTASK)",
+  "summary": "Short title (English, required if CREATE_SUBTASK; optional if COMMENT)",
+  "description": "Detailed description (English, required if CREATE_SUBTASK; optional if COMMENT)",
   "priority": "High | Medium",
   "assignee_id": "Phuc_ID | Tram_ID | Vy_ID"
 }
@@ -165,8 +287,22 @@ OUTPUT CONTRACT (JSON ONLY):
       
       let cleaned = stripCodeFences(rawText);
       let jsonStr = extractFirstJsonObject(cleaned) || cleaned;
-      
-      const decision = ensureDecisionShape(JSON.parse(jsonStr));
+
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch (error) {
+        let repaired = sanitizeJsonForParse(jsonStr);
+        try {
+          parsed = JSON.parse(repaired);
+        } catch (innerError) {
+          const tightened = extractFirstJsonObject(repaired) || repaired;
+          repaired = sanitizeJsonForParse(tightened);
+          parsed = JSON.parse(repaired);
+        }
+      }
+
+      const decision = ensureDecisionShape(parsed);
 
       // Mapping IDs
       const mapping = {
@@ -186,6 +322,27 @@ OUTPUT CONTRACT (JSON ONLY):
         return { decision: "IGNORE", reason: `OLLAMA_ERROR: ${ollamaError}` };
       }
       console.error('AI Service Error:', error);
+
+      try {
+        const provider = normalizeString(process.env.AI_PROVIDER).toLowerCase();
+        if (provider === "ollama") {
+          const transcriptLines = clampInt(process.env.AI_TRANSCRIPT_LINES, { min: 3, max: 30, fallback: 12 });
+          const compactTranscript = tailLines(chatTranscript, transcriptLines);
+          const fallback = ensureDecisionShape(
+            fallbackDecisionFromTranscript({ latestMessageText, compactTranscript })
+          );
+          const mapping = {
+            'Phuc_ID': { id: process.env.JIRA_ASSIGNEE_Phuc_ID, name: 'Phuc (Engineering)' },
+            'Tram_ID': { id: process.env.JIRA_ASSIGNEE_Tram_ID, name: 'Tram (Support)' },
+            'Vy_ID': { id: process.env.JIRA_ASSIGNEE_Vy_ID, name: 'Vy (Operations)' }
+          };
+          const pic = mapping[fallback.assignee_id] || mapping['Phuc_ID'];
+          fallback.assignee_id = pic?.id || "";
+          fallback.assignee_name = pic.name;
+          return fallback;
+        }
+      } catch {}
+
       return { decision: 'IGNORE', reason: 'AI error' };
     }
   }
