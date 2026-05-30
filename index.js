@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const supabase = require('./src/lib/supabase');
 const whatsappClient = require('./src/services/whatsappIngestion');
+const supabaseService = require('./src/services/supabaseService');
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -83,6 +84,53 @@ app.get('/api/clients', async (req, res) => {
     
     if (error) throw error;
     res.json({ data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API 5: Cập nhật trạng thái Ticket
+app.put('/api/tickets/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const ticket = await supabaseService.updateTicketStatus(id, status);
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+    res.json({ success: true, ticket });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API 6: Gửi tin nhắn WhatsApp từ Dashboard
+app.post('/api/conversations/send', async (req, res) => {
+  try {
+    const { chatId, text } = req.body;
+    await whatsappClient.sendMessage(chatId, text);
+    
+    // Lưu vào DB
+    await supabaseService.saveConversation({
+      chatId,
+      clientName: 'Danta Labs Autoreply',
+      messageId: `out_dash_${Date.now()}`,
+      direction: 'outbound',
+      text,
+      aiDecision: 'IGNORE'
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API 7: Thêm VIP Client mới
+app.post('/api/clients', async (req, res) => {
+  try {
+    const { chat_id, display_name } = req.body;
+    const client = await supabaseService.addVipClient(chat_id, display_name);
+    if (!client) return res.status(400).json({ error: 'Failed to add client or client already exists' });
+    res.json({ success: true, client });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

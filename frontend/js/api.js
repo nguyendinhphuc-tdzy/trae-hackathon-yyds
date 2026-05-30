@@ -4,7 +4,7 @@
 import { mockOverview, mockClients, mockTickets, mockConversations } from './mock-data.js';
 
 export const CONFIG = {
-  useMock: true, // Switch to FALSE to wire directly into the Node.js Express backend
+  useMock: false, // Switch to FALSE to wire directly into the Node.js Express backend
   backendUrl: 'http://localhost:3000'
 };
 
