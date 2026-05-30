@@ -558,6 +558,19 @@ body.sidebar-collapsed .ops-info {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 22px rgba(239, 68, 68, 0.12);
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.16), 0 0 26px rgba(168, 85, 247, 0.06);
+}
+
 .btn-icon {
   padding: 0.5rem;
   border-radius: var(--radius-sm);
@@ -1073,8 +1086,13 @@ body.sidebar-collapsed .ops-info {
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border-color);
   display: flex;
+<<<<<<< Updated upstream
   justify-content: space-between;
   gap: 1rem;
+=======
+  align-items: center;
+  justify-content: space-between;
+>>>>>>> Stashed changes
   background-color: rgba(11, 15, 25, 0.5);
 }
 
@@ -1087,6 +1105,7 @@ body.sidebar-collapsed .ops-info {
 
 .drawer-footer-right .btn {
   min-width: 160px;
+<<<<<<< Updated upstream
 }
 
 .btn-danger {
@@ -1102,6 +1121,8 @@ body.sidebar-collapsed .ops-info {
 
 .btn-danger:active {
   transform: translateY(1px);
+=======
+>>>>>>> Stashed changes
 }
 
 /* --- INBOX (CHAT ENGINE) TAB --- */

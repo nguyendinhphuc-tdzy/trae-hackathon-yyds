@@ -349,7 +349,10 @@ function normalizeTicket(raw) {
   base.is_deleted = Boolean(base.is_deleted);
   base.deleted_at = base.deleted_at || null;
   base.last_human_update_at = base.last_human_update_at || null;
+<<<<<<< Updated upstream
   base.assignee_name = base.assignee_name || 'Team';
+=======
+>>>>>>> Stashed changes
   return base;
 }
 
@@ -365,6 +368,7 @@ function assigneeIdForName(name) {
 const apiService = {
   async getOverview() {
     await delay();
+<<<<<<< Updated upstream
     if (CONFIG.useMock) {
       const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
       const totalTickets = state.tickets.filter(t => !normalizeTicket(t).is_deleted).length;
@@ -375,6 +379,17 @@ const apiService = {
         }
         return acc;
       }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
+=======
+    const totalConversations = state.conversations.filter(c => c.direction !== 'system').length;
+    const totalTickets = state.tickets.filter(t => !t.is_deleted).length;
+    const activeClients = state.clients.length;
+    const byDecision = state.conversations.reduce((acc, c) => {
+      if (c.aiDecision && c.direction === 'inbound') {
+        acc[c.aiDecision] = (acc[c.aiDecision] || 0) + 1;
+      }
+      return acc;
+    }, { CREATE_SUBTASK: 0, COMMENT: 0, IGNORE: 0 });
+>>>>>>> Stashed changes
 
     byDecision.CREATE_SUBTASK = state.tickets.filter(t => !t.is_deleted).length;
       byDecision.COMMENT = 34;
@@ -396,6 +411,7 @@ const apiService = {
 
   async getTickets(options = {}) {
     await delay();
+<<<<<<< Updated upstream
     if (CONFIG.useMock) {
       const includeDeleted = Boolean(options.includeDeleted);
       return state.tickets
@@ -517,6 +533,88 @@ const apiService = {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) return { success: false, error: body.error || 'Delete not supported by backend' };
     return { success: true, ticket: normalizeTicket(body.data || body) };
+=======
+    const includeDeleted = Boolean(options.includeDeleted);
+    const list = state.tickets
+      .map(normalizeTicket)
+      .filter(t => includeDeleted ? true : !t.is_deleted)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return list;
+  },
+
+  async updateTicketStatus(ticketId, newStatus) {
+    return await apiService.updateTicket(ticketId, { status: newStatus });
+  },
+
+  async updateTicket(ticketId, patch = {}) {
+    await delay(320);
+    const ticket = state.tickets.find(t => t.id === parseInt(ticketId));
+    if (!ticket) return { success: false, error: 'Ticket not found' };
+    if (ticket.is_deleted) return { success: false, error: 'Ticket is deleted' };
+
+    const prev = normalizeTicket(ticket);
+
+    const next = { ...ticket };
+    if (typeof patch.summary === 'string') next.summary = patch.summary;
+    if (typeof patch.description === 'string') next.description = patch.description;
+    if (typeof patch.priority === 'string') next.priority = patch.priority;
+    if (typeof patch.status === 'string') next.status = patch.status;
+    if (typeof patch.assignee_name === 'string') {
+      next.assignee_name = patch.assignee_name;
+      next.assignee_id = assigneeIdForName(patch.assignee_name);
+    }
+
+    next.human_edits = Number.isFinite(next.human_edits) ? next.human_edits : 0;
+    next.human_edits += 1;
+    next.last_human_update_at = new Date().toISOString();
+    next.updated_at = new Date().toISOString();
+
+    Object.assign(ticket, next);
+
+    const changes = [];
+    if (prev.status !== ticket.status) changes.push(`status → ${ticket.status}`);
+    if (prev.priority !== ticket.priority) changes.push(`priority → ${ticket.priority}`);
+    if (prev.assignee_name !== ticket.assignee_name) changes.push(`assignee → ${ticket.assignee_name}`);
+    if (prev.summary !== ticket.summary) changes.push(`summary updated`);
+    if (prev.description !== ticket.description) changes.push(`description updated`);
+
+    const logId = `sys_tkt_edit_${Date.now()}`;
+    state.conversations.push({
+      id: logId,
+      chat_id: ticket.chat_id,
+      client_name: "YYDS System",
+      text: `[YYDS Ops] Ticket #${ticket.jira_key || ticket.id} updated (${changes.length ? changes.join(', ') : 'metadata'}).`,
+      direction: "system",
+      aiDecision: "IGNORE",
+      created_at: new Date().toISOString()
+    });
+
+    return { success: true, ticket: normalizeTicket(ticket) };
+  },
+
+  async deleteTicket(ticketId) {
+    await delay(320);
+    const ticket = state.tickets.find(t => t.id === parseInt(ticketId));
+    if (!ticket) return { success: false, error: 'Ticket not found' };
+    if (ticket.is_deleted) return { success: true, ticket: normalizeTicket(ticket) };
+
+    ticket.is_deleted = true;
+    ticket.deleted_at = new Date().toISOString();
+    ticket.updated_at = new Date().toISOString();
+
+    const logId = `sys_tkt_del_${Date.now()}`;
+    state.conversations.push({
+      id: logId,
+      chat_id: ticket.chat_id,
+      client_name: "YYDS System",
+      text: `[YYDS Ops] Ticket #${ticket.jira_key || ticket.id} deleted after review.`,
+      direction: "system",
+      aiDecision: "IGNORE",
+      created_at: new Date().toISOString()
+    });
+
+    return { success: true, ticket: normalizeTicket(ticket) };
+>>>>>>> Stashed changes
   },
 
   async getConversations() {
@@ -614,11 +712,34 @@ const apiService = {
       return { success: true, client: newClient };
     }
 
+<<<<<<< Updated upstream
     const normalizedChatId = chatId.includes('@') ? chatId : `${chatId}@c.us`;
     const res = await fetch(`${CONFIG.backendUrl}/api/clients`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: normalizedChatId, display_name: displayName, assignee_name: assigneeName })
+=======
+    const newClient = {
+      chat_id: chatId.includes('@') ? chatId : `${chatId}@c.us`,
+      display_name: displayName,
+      ticket_count: 0,
+      assignee_id: assigneeIdForName(assigneeName),
+      assignee_name: assigneeName,
+      last_seen_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+
+    state.clients.push(newClient);
+    
+    state.conversations.push({
+      id: `sys_seed_${Date.now()}`,
+      chat_id: newClient.chat_id,
+      client_name: "YYDS System",
+      text: `[YYDS] Số điện thoại ${newClient.chat_id} đã được thêm thành công vào YYDS VIP whitelist.`,
+      direction: "system",
+      aiDecision: "IGNORE",
+      created_at: new Date().toISOString()
+>>>>>>> Stashed changes
     });
     return await res.json();
   }
